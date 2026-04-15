@@ -1,0 +1,584 @@
+<!--
+  ============================================================
+  SLATE TEMPLATE
+  ============================================================
+  This is a complete, working Slate deck. Give it to an LLM with an
+  instruction like:
+
+      "Adapt this Slate template to create a deck about [YOUR TOPIC].
+       Keep all CSS, class names, and structure exactly as-is. Only
+       replace the placeholder copy inside each <section class='slide'>."
+
+  The LLM should preserve:
+    - All <style> blocks (the design system)
+    - The class names on every element (.slide, .dark, .eyebrow, etc.)
+    - The chrome + meta row on every slide
+    - The slate-frame block near </body>
+
+  The LLM should replace:
+    - Placeholder copy inside each slide (headlines, body, labels)
+    - The brand wordmark in the chrome (currently "STUDIO")
+    - The accent colour in :root (--accent and derivatives)
+    - The <title> tag
+  ============================================================
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Slate — Template</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* --- CHANGE THE ACCENT HEX TO RE-COLOUR THE WHOLE DECK --- */
+    --accent:#3D3FB7;
+    --accent-soft:#A8AAEB;
+    --slide-bg-dark:#16174A;
+    /* -------------------------------------------------------- */
+
+    --page-bg:#EEECE6;
+    --slide-bg:#FFFFFF;
+    --ink:#121332;
+    --ink-muted:#585B7A;
+    --ink-faint:#9A9CB3;
+    --rule:rgba(18,19,50,0.09);
+    --rule-dark:rgba(255,255,255,0.14);
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  body{
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:var(--page-bg);
+    color:var(--ink);
+    padding:56px 24px 140px;
+    min-height:100vh;
+    font-feature-settings:"ss01","cv11";
+  }
+  .gallery{max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:32px;}
+
+  /* --- slide frame --- */
+  .slide{
+    position:relative;width:100%;aspect-ratio:16/9;
+    background:var(--slide-bg);color:var(--ink);
+    overflow:hidden;container-type:inline-size;
+    box-shadow:0 1px 2px rgba(0,0,0,0.04),0 24px 60px -20px rgba(18,19,50,0.18);
+    border-radius:4px;
+  }
+  .slide.dark{background:var(--slide-bg-dark);color:#F2F1EC;}
+  .inner{position:absolute;inset:0;padding:6cqw 7cqw;display:flex;flex-direction:column;z-index:2;}
+
+  /* --- type primitives --- */
+  .eyebrow{font-weight:500;font-size:.85cqw;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);}
+  .slide.dark .eyebrow{color:var(--accent-soft);}
+  .sec{font-weight:500;font-size:.78cqw;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-faint);}
+  .slide.dark .sec{color:rgba(255,255,255,0.55);}
+  .h1{font-weight:600;font-size:5.4cqw;line-height:1.02;letter-spacing:-.028em;}
+  .h2{font-weight:600;font-size:3.4cqw;line-height:1.06;letter-spacing:-.022em;}
+  .body{font-weight:400;font-size:1.05cqw;line-height:1.6;color:var(--ink-muted);}
+  .slide.dark .body{color:rgba(242,241,236,0.72);}
+  em{font-style:normal;font-weight:500;color:var(--accent);}
+  .slide.dark em{color:var(--accent-soft);}
+  .mono{font-variant-numeric:tabular-nums;}
+
+  /* --- meta row (every non-title slide) --- */
+  .meta-row{display:flex;align-items:baseline;justify-content:space-between;
+    padding-bottom:1.8cqw;border-bottom:1px solid var(--rule);margin-bottom:3.2cqw;}
+  .slide.dark .meta-row{border-color:var(--rule-dark);}
+
+  /* --- chrome (every slide) --- */
+  .chrome{position:absolute;left:7cqw;right:7cqw;bottom:3.2cqw;
+    display:flex;align-items:center;justify-content:space-between;
+    font-size:.78cqw;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-faint);z-index:3;}
+  .slide.dark .chrome{color:rgba(255,255,255,0.42);}
+  .chrome .mark{display:flex;align-items:center;gap:.6cqw;}
+  .chrome .dot{width:.55cqw;height:.55cqw;border-radius:50%;background:var(--accent);}
+  .slide.dark .chrome .dot{background:var(--accent-soft);}
+
+  /* --- CSS-generated gradient backgrounds (no image deps) --- */
+  .slide.has-bg{color:#FFFFFF;}
+  .slide.has-bg .bg{
+    position:absolute;inset:0;z-index:0;
+    background:
+      radial-gradient(60% 80% at 20% 25%, rgba(168,170,235,0.35) 0%, rgba(61,63,183,0) 55%),
+      radial-gradient(70% 90% at 85% 90%, rgba(10,12,40,0.75) 0%, rgba(61,63,183,0) 60%),
+      radial-gradient(120% 90% at 50% 50%, #4A4CCB 0%, var(--accent) 40%, #1F2182 75%, #0B0C2B 100%);
+  }
+  .slide.has-bg .bg::after{
+    content:'';position:absolute;inset:0;
+    background:
+      linear-gradient(180deg,rgba(11,12,43,0.25) 0%,rgba(11,12,43,0) 30%,rgba(11,12,43,0.55) 100%),
+      linear-gradient(90deg,rgba(11,12,43,0.50) 0%,rgba(11,12,43,0) 55%);
+  }
+
+  /* --- slide 1: title --- */
+  .slide.title .inner{justify-content:space-between;}
+  .slide.title .eyebrow{color:rgba(255,255,255,0.85);}
+  .slide.title .h1{font-weight:500;letter-spacing:-.03em;max-width:80%;}
+  .slide.title .h1 em{color:var(--accent-soft);}
+  .slide.title .sub{margin-top:2.2cqw;font-size:1.25cqw;color:rgba(255,255,255,0.78);font-weight:300;max-width:58%;line-height:1.5;}
+  .slide.title .meta{margin-top:2.4cqw;display:flex;gap:2.2cqw;font-size:.82cqw;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,0.7);}
+  .slide.title .meta span strong{display:block;color:#FFFFFF;font-weight:500;margin-top:.35cqw;letter-spacing:.08em;text-transform:none;font-size:1.1cqw;}
+
+  /* --- slide 2: agenda --- */
+  .agenda-grid{margin-top:auto;display:grid;grid-template-columns:repeat(2,1fr);gap:2.2cqw 4cqw;}
+  .agenda-item{display:grid;grid-template-columns:3cqw 1fr;gap:1.4cqw;padding:1.4cqw 0;border-top:1px solid var(--rule);}
+  .agenda-item .num{font-size:.95cqw;font-weight:500;color:var(--accent);letter-spacing:.04em;padding-top:.3cqw;}
+  .agenda-item .ttl{font-size:1.4cqw;font-weight:500;line-height:1.2;letter-spacing:-.012em;}
+  .agenda-item .sub{font-size:.95cqw;color:var(--ink-muted);margin-top:.5cqw;line-height:1.5;}
+
+  /* --- slide 3: statement (dark) --- */
+  .statement{margin:auto 0;max-width:82%;font-size:2.6cqw;font-weight:400;line-height:1.3;letter-spacing:-.016em;color:#FFFFFF;}
+
+  /* --- slide 4 & 5: two-column / narrative --- */
+  .cols{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:4.5cqw;padding-top:2.4cqw;border-top:1px solid var(--rule);}
+  .cols .col h3{font-size:1.3cqw;font-weight:500;letter-spacing:-.012em;margin-bottom:1cqw;color:var(--ink);}
+  .cols .col p{font-size:1cqw;line-height:1.65;color:var(--ink-muted);margin-bottom:.9cqw;}
+  .cols .col p:last-child{margin-bottom:0;}
+
+  /* --- slide 6: stats --- */
+  .stats{margin-top:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:3cqw;padding-top:3cqw;border-top:1px solid var(--rule);}
+  .stat .num{font-size:5.8cqw;font-weight:500;letter-spacing:-.03em;line-height:1;color:var(--accent);}
+  .stat .lbl{margin-top:.8cqw;font-size:.95cqw;font-weight:500;color:var(--ink);}
+  .stat .desc{margin-top:.4cqw;font-size:.9cqw;color:var(--ink-muted);line-height:1.55;}
+
+  /* --- slide 7: principles (dark) --- */
+  .plist{margin-top:auto;display:flex;flex-direction:column;}
+  .prow{display:grid;grid-template-columns:3cqw 1.3fr 1fr;gap:2.4cqw;padding:1.6cqw 0;border-bottom:1px solid var(--rule-dark);align-items:baseline;}
+  .prow:first-child{border-top:1px solid var(--rule-dark);}
+  .prow .idx{font-size:.9cqw;font-weight:500;color:var(--accent-soft);letter-spacing:.04em;}
+  .prow .h{font-size:1.35cqw;font-weight:500;letter-spacing:-.012em;color:#F2F1EC;}
+  .prow .d{font-size:1cqw;color:rgba(242,241,236,0.72);line-height:1.55;}
+
+  /* --- slide 8: methodology --- */
+  .method{margin-top:auto;display:flex;flex-direction:column;}
+  .mrow{display:grid;grid-template-columns:6cqw 1fr 1.6fr;gap:2cqw;padding:1cqw 0;border-bottom:1px solid var(--rule);align-items:baseline;}
+  .mrow:first-child{border-top:1px solid var(--rule);}
+  .mrow .step{font-size:.82cqw;font-weight:500;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;}
+  .mrow h4{font-size:1.15cqw;font-weight:500;color:var(--ink);line-height:1.25;letter-spacing:-.012em;}
+  .mrow p{font-size:.88cqw;line-height:1.55;color:var(--ink-muted);}
+
+  /* --- slide 9: quote --- */
+  .quote{margin:auto 0;max-width:82%;}
+  .quote .mark-q{font-size:4.5cqw;font-weight:500;color:var(--accent);line-height:0;display:inline-block;transform:translateY(1.2cqw);}
+  .quote .q{font-size:2.4cqw;font-weight:400;line-height:1.3;letter-spacing:-.014em;}
+  .quote .attr{margin-top:2.2cqw;font-size:.88cqw;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-muted);}
+
+  /* --- slide 10: case study --- */
+  .case{margin-top:auto;display:grid;grid-template-columns:1.4fr 1fr;gap:5cqw;padding-top:2.4cqw;border-top:1px solid var(--rule);align-items:start;}
+  .case h3{font-size:1.35cqw;font-weight:500;letter-spacing:-.012em;margin-bottom:1cqw;color:var(--ink);}
+  .case p{font-size:.95cqw;line-height:1.65;color:var(--ink-muted);margin-bottom:.85cqw;}
+  .case p:last-child{margin-bottom:0;}
+  .case .proofs{display:flex;flex-direction:column;}
+  .case .proof{padding:1.2cqw 0;border-top:1px solid var(--rule);}
+  .case .proof .num{font-size:3.2cqw;font-weight:500;letter-spacing:-.025em;line-height:1;color:var(--accent);}
+  .case .proof .lbl{margin-top:.5cqw;font-size:.85cqw;font-weight:500;color:var(--ink);}
+  .case .proof .desc{margin-top:.3cqw;font-size:.82cqw;color:var(--ink-muted);line-height:1.5;}
+
+  /* --- slide 11: deliverables --- */
+  .deliver{margin-top:auto;display:grid;grid-template-columns:repeat(2,1fr);gap:1.6cqw 4cqw;padding-top:2.4cqw;border-top:1px solid var(--rule);}
+  .dv{display:grid;grid-template-columns:2.8cqw 1fr;gap:1cqw;padding:.8cqw 0;}
+  .dv .n{font-size:.88cqw;font-weight:500;color:var(--accent);letter-spacing:.04em;padding-top:.2cqw;}
+  .dv .t{font-size:1.1cqw;font-weight:500;letter-spacing:-.012em;color:var(--ink);margin-bottom:.35cqw;}
+  .dv .d{font-size:.88cqw;color:var(--ink-muted);line-height:1.55;}
+
+  /* --- slide 12: close --- */
+  .close-layout{margin-top:auto;display:grid;grid-template-columns:1.5fr 1fr;gap:6cqw;align-items:end;}
+  .close-layout .cta{display:inline-flex;align-items:center;gap:1cqw;padding:1.4cqw 2cqw;background:#FFFFFF;color:var(--slide-bg-dark);border-radius:2px;font-size:1cqw;font-weight:500;text-decoration:none;}
+  .close-layout .contact{display:flex;flex-direction:column;gap:.5cqw;font-size:.98cqw;color:rgba(242,241,236,0.72);line-height:1.5;}
+  .close-layout .contact strong{color:#F2F1EC;font-weight:500;}
+</style>
+</head>
+<body>
+<main class="gallery">
+
+  <!-- ============================================================
+       SLIDE 1 · TITLE (dark, gradient bg)
+       Replace: eyebrow, h1 headline, sub, the 3 meta items
+       ============================================================ -->
+  <section class="slide title has-bg dark">
+    <div class="bg"></div>
+    <div class="inner">
+      <div class="eyebrow">Presentation · 2026</div>
+      <div class="title-block" style="margin-top:auto;">
+        <h1 class="h1">Your headline here,<br>with <em>intent.</em></h1>
+        <p class="sub">A one-sentence subtitle that sets up what the deck is about.</p>
+        <div class="meta">
+          <span>Prepared by<strong>Your Name</strong></span>
+          <span>For<strong>Your Audience</strong></span>
+          <span>Date<strong>Month 2026</strong></span>
+        </div>
+      </div>
+      <div class="chrome">
+        <div class="mark"><span class="dot"></span><span>STUDIO</span></div>
+        <span>01 / 12</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 2 · AGENDA (light)
+       Replace: eyebrow, section label, h2 headline, 4 agenda items
+       ============================================================ -->
+  <section class="slide">
+    <div class="inner">
+      <div class="meta-row">
+        <span class="eyebrow">Agenda</span>
+        <span class="sec">Section 01</span>
+      </div>
+      <h2 class="h2" style="max-width:78%;">What we'll cover.</h2>
+      <div class="agenda-grid">
+        <div class="agenda-item">
+          <div class="num">01</div>
+          <div>
+            <div class="ttl">First section title</div>
+            <div class="sub">One-line description of what this section covers.</div>
+          </div>
+        </div>
+        <div class="agenda-item">
+          <div class="num">02</div>
+          <div>
+            <div class="ttl">Second section title</div>
+            <div class="sub">One-line description of what this section covers.</div>
+          </div>
+        </div>
+        <div class="agenda-item">
+          <div class="num">03</div>
+          <div>
+            <div class="ttl">Third section title</div>
+            <div class="sub">One-line description of what this section covers.</div>
+          </div>
+        </div>
+        <div class="agenda-item">
+          <div class="num">04</div>
+          <div>
+            <div class="ttl">Fourth section title</div>
+            <div class="sub">One-line description of what this section covers.</div>
+          </div>
+        </div>
+      </div>
+      <div class="chrome">
+        <div class="mark"><span class="dot"></span><span>STUDIO</span></div>
+        <span>02 / 12</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 3 · STATEMENT (dark, gradient bg)
+       Replace: eyebrow, section label, statement text
+       ============================================================ -->
+  <section class="slide has-bg dark">
+    <div class="bg"></div>
+    <div class="inner">
+      <div class="meta-row">
+        <span class="eyebrow">The premise</span>
+        <span class="sec">Section 02</span>
+      </div>
+      <p class="statement">A single confident sentence that establishes the premise of the deck. Keep it short.</p>
+      <div class="chrome">
+        <div class="mark"><span class="dot"></span><span>STUDIO</span></div>
+        <span>03 / 12</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 4 · TWO-COLUMN CONTEXT (light)
+       Replace: eyebrow, section, h2, both column subheads + bodies
+       ============================================================ -->
+  <section class="slide">
+    <div class="inner">
+      <div class="meta-row">
+        <span class="eyebrow">Context</span>
+        <span class="sec">Section 02</span>
+      </div>
+      <h2 class="h2" style="max-width:70%;">Two forces are shaping the brief.</h2>
+      <div class="cols">
+        <div class="col">
+          <h3>First column subhead</h3>
+          <p>A short paragraph — one or two sentences — establishing the first of two contrasting ideas. Use <em>em</em> tags for accent emphasis.</p>
+        </div>
+        <div class="col">
+          <h3>Second column subhead</h3>
+          <p>A short paragraph establishing the opposing or complementary idea. Keep both columns roughly balanced in length.</p>
+        </div>
+      </div>
+      <div class="chrome">
+        <div class="mark"><span class="dot"></span><span>STUDIO</span></div>
+        <span>04 / 12</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 5 · NARRATIVE (light, copy-heavy)
+       Replace: eyebrow, section, h2, subheads + multi-paragraph bodies
+       ============================================================ -->
+  <section class="slide">
+    <div class="inner">
+      <div class="meta-row">
+        <span class="eyebrow">The fuller picture</span>
+        <span class="sec">Section 02</span>
+      </div>
+      <h2 class="h2" style="max-width:72%;">A longer headline that sets up deeper context.</h2>
+      <div class="cols">
+        <div class="col">
+          <h3>First subhead</h3>
+          <p>First paragraph of denser body copy. Use this slide type when you need to tell more of the story than a two-column split allows. Each column can carry two or three paragraphs.</p>
+          <p>Second paragraph continuing the thought. The <em>accent emphasis</em> pattern works well here for highlighting key phrases.</p>
+        </div>
+        <div class="col">
+          <h3>Second subhead</h3>
+          <p>First paragraph on the other side of the argument or angle. Keep voice consistent across columns.</p>
+          <p>Second paragraph. Balance the column lengths so neither side feels top-heavy.</p>
+        </div>
+      </div>
+      <div class="chrome">
+        <div class="mark"><span class="dot"></span><span>STUDIO</span></div>
+        <span>05 / 12</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 6 · STATS (light)
+       Replace: eyebrow, section, h2, 3 stat numbers + labels + descs
+       ============================================================ -->
+  <section class="slide">
+    <div class="inner">
+      <div class="meta-row">
+        <span class="eyebrow">By the numbers</span>
+        <span class="sec">Section 03</span>
+      </div>
+      <h2 class="h2" style="max-width:60%;">The case,<br>in three figures.</h2>
+      <div class="stats">
+        <div class="stat">
+          <div class="num mono">3.2×</div>
+          <div class="lbl">Label for the first stat</div>
+          <div class="desc">One-line description giving context to the number.</div>
+        </div>
+        <div class="stat">
+          <div class="num mono">41%</div>
+          <div class="lbl">Label for the second stat</div>
+          <div class="desc">One-line description giving context to the number.</div>
+        </div>
+        <div class="stat">
+          <div class="num mono">$1.8M</div>
+          <div class="lbl">Label for the third stat</div>
+          <div class="desc">One-line description giving context to the number.</div>
+        </div>
+      </div>
+      <div class="chrome">
+        <div class="mark"><span class="dot"></span><span>STUDIO</span></div>
+        <span>06 / 12</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 7 · PRINCIPLES (dark)
+       Replace: eyebrow, section, h2, 3 indexed rows
+       ============================================================ -->
+  <section class="slide dark">
+    <div class="inner">
+      <div class="meta-row">
+        <span class="eyebrow">Approach</span>
+        <span class="sec">Section 03</span>
+      </div>
+      <h2 class="h2" style="max-width:70%;color:#F2F1EC;">Three principles<br>guide the work.</h2>
+      <div class="plist">
+        <div class="prow">
+          <div class="idx">P · 01</div>
+          <div class="h">First principle, short</div>
+          <div class="d">One sentence of elaboration on what this principle means in practice.</div>
+        </div>
+        <div class="prow">
+          <div class="idx">P · 02</div>
+          <div class="h">Second principle, short</div>
+          <div class="d">One sentence of elaboration on what this principle means in practice.</div>
+        </div>
+        <div class="prow">
+          <div class="idx">P · 03</div>
+          <div class="h">Third principle, short</div>
+          <div class="d">One sentence of elaboration on what this principle means in practice.</div>
+        </div>
+      </div>
+      <div class="chrome">
+        <div class="mark"><span class="dot"></span><span>STUDIO</span></div>
+        <span>07 / 12</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 8 · METHODOLOGY (light, up to 5 stages)
+       Replace: eyebrow, section, h2, up to 5 stage rows
+       ============================================================ -->
+  <section class="slide">
+    <div class="inner">
+      <div class="meta-row">
+        <span class="eyebrow">How we work</span>
+        <span class="sec">Section 03</span>
+      </div>
+      <h2 class="h2" style="max-width:72%;font-size:2.6cqw;">Five stages, built around decisions.</h2>
+      <div class="method">
+        <div class="mrow">
+          <div class="step">01 · STEP ONE</div>
+          <h4>Title for the first stage</h4>
+          <p>One-sentence description of what happens during this stage and why it matters to the outcome.</p>
+        </div>
+        <div class="mrow">
+          <div class="step">02 · STEP TWO</div>
+          <h4>Title for the second stage</h4>
+          <p>One-sentence description of what happens during this stage and why it matters to the outcome.</p>
+        </div>
+        <div class="mrow">
+          <div class="step">03 · STEP THREE</div>
+          <h4>Title for the third stage</h4>
+          <p>One-sentence description of what happens during this stage and why it matters to the outcome.</p>
+        </div>
+        <div class="mrow">
+          <div class="step">04 · STEP FOUR</div>
+          <h4>Title for the fourth stage</h4>
+          <p>One-sentence description of what happens during this stage and why it matters to the outcome.</p>
+        </div>
+        <div class="mrow">
+          <div class="step">05 · STEP FIVE</div>
+          <h4>Title for the fifth stage</h4>
+          <p>One-sentence description of what happens during this stage and why it matters to the outcome.</p>
+        </div>
+      </div>
+      <div class="chrome">
+        <div class="mark"><span class="dot"></span><span>STUDIO</span></div>
+        <span>08 / 12</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 9 · QUOTE (light)
+       Replace: eyebrow, section, quote text, attribution
+       ============================================================ -->
+  <section class="slide">
+    <div class="inner">
+      <div class="meta-row">
+        <span class="eyebrow">In their words</span>
+        <span class="sec">Section 04</span>
+      </div>
+      <div class="quote">
+        <span class="mark-q">"</span>
+        <p class="q">A memorable sentence or two from a credible source. Keep it short enough to read in one breath.</p>
+        <p class="attr">Attribution Name · Role · Organisation</p>
+      </div>
+      <div class="chrome">
+        <div class="mark"><span class="dot"></span><span>STUDIO</span></div>
+        <span>09 / 12</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 10 · CASE STUDY (light)
+       Replace: eyebrow, section, h2, case_title, narrative paragraphs,
+       3 proof stats
+       ============================================================ -->
+  <section class="slide">
+    <div class="inner">
+      <div class="meta-row">
+        <span class="eyebrow">Selected work</span>
+        <span class="sec">Section 04</span>
+      </div>
+      <h2 class="h2" style="max-width:72%;font-size:2.6cqw;">How this played out for a recent partner.</h2>
+      <div class="case">
+        <div class="narr">
+          <h3>Case study sub-heading</h3>
+          <p>First paragraph setting up the context for the case study — who the partner was, what the problem looked like, why they came to you.</p>
+          <p>Second paragraph describing what you did together — the approach, the key decisions, the turning points.</p>
+          <p>Third paragraph on the outcome and what made the result stick.</p>
+        </div>
+        <div class="proofs">
+          <div class="proof">
+            <div class="num mono">9 wks</div>
+            <div class="lbl">First proof label</div>
+            <div class="desc">One-line description of what the number represents.</div>
+          </div>
+          <div class="proof">
+            <div class="num mono">2.4×</div>
+            <div class="lbl">Second proof label</div>
+            <div class="desc">One-line description of what the number represents.</div>
+          </div>
+          <div class="proof">
+            <div class="num mono">0</div>
+            <div class="lbl">Third proof label</div>
+            <div class="desc">One-line description of what the number represents.</div>
+          </div>
+        </div>
+      </div>
+      <div class="chrome">
+        <div class="mark"><span class="dot"></span><span>STUDIO</span></div>
+        <span>10 / 12</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 11 · DELIVERABLES (light, 6 items in 2 cols)
+       Replace: eyebrow, section, h2, 6 deliverable items
+       ============================================================ -->
+  <section class="slide">
+    <div class="inner">
+      <div class="meta-row">
+        <span class="eyebrow">What's included</span>
+        <span class="sec">Section 05</span>
+      </div>
+      <h2 class="h2" style="max-width:72%;font-size:2.6cqw;">What you'll have at the end of the engagement.</h2>
+      <div class="deliver">
+        <div class="dv"><div class="n">01 ·</div><div><div class="t">First deliverable</div><div class="d">A line or two describing what's delivered and why it's valuable.</div></div></div>
+        <div class="dv"><div class="n">02 ·</div><div><div class="t">Second deliverable</div><div class="d">A line or two describing what's delivered and why it's valuable.</div></div></div>
+        <div class="dv"><div class="n">03 ·</div><div><div class="t">Third deliverable</div><div class="d">A line or two describing what's delivered and why it's valuable.</div></div></div>
+        <div class="dv"><div class="n">04 ·</div><div><div class="t">Fourth deliverable</div><div class="d">A line or two describing what's delivered and why it's valuable.</div></div></div>
+        <div class="dv"><div class="n">05 ·</div><div><div class="t">Fifth deliverable</div><div class="d">A line or two describing what's delivered and why it's valuable.</div></div></div>
+        <div class="dv"><div class="n">06 ·</div><div><div class="t">Sixth deliverable</div><div class="d">A line or two describing what's delivered and why it's valuable.</div></div></div>
+      </div>
+      <div class="chrome">
+        <div class="mark"><span class="dot"></span><span>STUDIO</span></div>
+        <span>11 / 12</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 12 · CLOSE (dark, gradient bg)
+       Replace: eyebrow, section, h2, body, CTA label, contact block
+       ============================================================ -->
+  <section class="slide has-bg dark">
+    <div class="bg"></div>
+    <div class="inner">
+      <div class="meta-row">
+        <span class="eyebrow">Next</span>
+        <span class="sec">Close</span>
+      </div>
+      <h2 class="h2" style="max-width:78%;color:#FFFFFF;">Let's put this into motion.</h2>
+      <p class="body" style="max-width:60%;margin-top:1.4cqw;color:rgba(242,241,236,0.78);">A short paragraph framing the call to action — what you want the audience to do next, why, and by when.</p>
+      <div class="close-layout">
+        <a href="#" class="cta">CTA button label  →</a>
+        <div class="contact">
+          <strong>Your Name</strong>
+          <span>email@domain.com</span>
+          <span>+1 (555) 000 — 0000</span>
+        </div>
+      </div>
+      <div class="chrome">
+        <div class="mark"><span class="dot"></span><span>STUDIO</span></div>
+        <span>12 / 12</span>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

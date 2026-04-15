@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Slate — Start a deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEECE6;
+    --panel:#FFFFFF;
+    --ink:#121332;
+    --ink-muted:#585B7A;
+    --ink-faint:#9A9CB3;
+    --accent:#3D3FB7;
+    --accent-hover:#4E50C9;
+    --rule:rgba(18,19,50,0.09);
+    --code-bg:#F5F4EF;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;scroll-behavior:smooth;}
+  body{
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+    padding:72px 32px 120px;
+    font-feature-settings:"ss01","cv11";
+  }
+
+  .page{max-width:680px;margin:0 auto;}
+
+  .eyebrow{
+    font-size:10px;font-weight:500;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--accent);
+    margin-bottom:20px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{
+    content:'';display:inline-block;
+    width:5px;height:5px;border-radius:50%;background:var(--accent);
+  }
+
+  h1{
+    font-size:46px;font-weight:600;letter-spacing:-.024em;
+    line-height:1.02;margin-bottom:16px;
+  }
+
+  .lede{
+    font-size:15px;line-height:1.6;color:var(--ink-muted);
+    margin-bottom:44px;max-width:540px;
+  }
+
+  /* --- steps --- */
+  .steps{
+    display:flex;flex-direction:column;gap:0;
+    margin-bottom:40px;
+  }
+  .step{
+    display:grid;
+    grid-template-columns:40px 1fr;
+    gap:20px;
+    padding:28px 0;
+    border-top:1px solid var(--rule);
+    align-items:start;
+  }
+  .step:last-child{border-bottom:1px solid var(--rule);}
+  .step-num{
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:12px;font-weight:500;color:var(--accent);
+    letter-spacing:.08em;
+    padding-top:6px;
+  }
+  .step-body h2{
+    font-size:18px;font-weight:500;letter-spacing:-.012em;
+    margin-bottom:6px;color:var(--ink);
+  }
+  .step-body p{
+    font-size:14px;line-height:1.6;color:var(--ink-muted);
+    margin-bottom:14px;
+  }
+  .step-body p:last-child{margin-bottom:0;}
+  .step-body p code{
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:12px;
+    background:var(--code-bg);
+    padding:1px 6px;
+    border-radius:3px;
+    color:var(--ink);
+    letter-spacing:.01em;
+  }
+
+  /* --- buttons --- */
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:'Inter',sans-serif;
+    font-size:13px;font-weight:500;letter-spacing:.01em;
+    padding:11px 20px;
+    border:none;border-radius:2px;
+    cursor:pointer;
+    text-decoration:none;
+    transition:background .15s ease, transform .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .btn.primary{
+    background:var(--accent);color:#FFFFFF;
+  }
+  .btn.primary:hover{background:var(--accent-hover);}
+  .btn.primary:active{transform:scale(.98);}
+  .btn.primary.copied{background:#1F5F3A;}
+  .btn.ghost{
+    background:transparent;
+    color:var(--ink);
+    border:1px solid var(--rule);
+  }
+  .btn.ghost:hover{border-color:var(--ink);}
+
+  .actions{
+    display:flex;gap:8px;flex-wrap:wrap;
+    margin-top:4px;
+  }
+
+  /* --- instruction snippet --- */
+  .snippet{
+    position:relative;
+    background:var(--code-bg);
+    border-radius:4px;
+    padding:16px 20px;
+    margin-top:8px;
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:12px;line-height:1.6;
+    color:var(--ink);
+  }
+  .snippet .copy{
+    position:absolute;top:10px;right:10px;
+    font-family:'Inter',sans-serif;font-size:11px;font-weight:500;
+    padding:4px 10px;
+    background:var(--panel);color:var(--ink-muted);
+    border:1px solid var(--rule);border-radius:2px;
+    cursor:pointer;letter-spacing:.04em;
+    transition:color .15s ease, border-color .15s ease;
+  }
+  .snippet .copy:hover{color:var(--accent);border-color:var(--accent);}
+  .snippet .copy.copied{color:#1F5F3A;border-color:#1F5F3A;}
+
+  /* --- footer --- */
+  .footer{
+    margin-top:56px;
+    font-size:12px;line-height:1.6;color:var(--ink-faint);
+  }
+  .footer a{
+    color:var(--ink-muted);text-decoration:none;
+    border-bottom:1px solid var(--rule);
+  }
+  .footer a:hover{color:var(--accent);border-color:var(--accent);}
+
+  /* --- toast --- */
+  .toast{
+    position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-12px);
+    background:var(--ink);color:#FFFFFF;
+    padding:10px 16px;border-radius:2px;
+    font-size:12px;font-weight:500;letter-spacing:.04em;
+    opacity:0;pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+    z-index:100;
+    box-shadow:0 4px 12px rgba(0,0,0,0.12);
+  }
+  .toast.visible{
+    opacity:1;transform:translateX(-50%) translateY(0);
+  }
+
+  @media (max-width:560px){
+    body{padding:40px 20px 80px;}
+    h1{font-size:36px;}
+    .step{grid-template-columns:32px 1fr;gap:14px;padding:22px 0;}
+  }
+</style>
+</head>
+<body>
+
+<main class="page">
+  <div class="eyebrow">Slate · Start a deck</div>
+  <h1>Make a deck.</h1>
+  <p class="lede">Slate decks are a single HTML file. You don't build one from scratch — you hand a template to an LLM, tell it your topic, and it adapts it. Three steps:</p>
+
+  <div class="steps">
+
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-body">
+        <h2>Get the template</h2>
+        <p>Download the Slate template. It's a complete, working 12-slide deck with placeholder copy in every slide type — the LLM's job is to swap the copy, not rebuild the design.</p>
+        <div class="actions">
+          <a class="btn primary" href="template.html" download="slate-template.html">Download template</a>
+          <a class="btn ghost" href="template.html" target="_blank">Preview in browser</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-body">
+        <h2>Give it to an LLM</h2>
+        <p>Open Claude, Cowork, ChatGPT, or any capable LLM. Attach (or paste) the template file and include a short instruction. Here's one that works:</p>
+        <div class="snippet">
+          <button class="copy" id="copy-btn">Copy</button>
+<span id="instruction">Adapt this Slate template to create a deck about [YOUR TOPIC].
+Audience: [WHO THE DECK IS FOR].
+Accent colour: [HEX, e.g. #3D3FB7].
+
+Keep all CSS, class names, and HTML structure exactly as-is.
+Only replace the placeholder copy inside each &lt;section class="slide"&gt;.
+Update the &lt;title&gt; tag and the "STUDIO" wordmark in each slide's chrome.
+Return the complete modified HTML as a single code block.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-body">
+        <h2>Save and present</h2>
+        <p>Save the LLM's response as <code>deck.html</code> and either open it directly in a browser, or drop it on the <a href="index.html" style="color:var(--accent);text-decoration:none;border-bottom:1px solid currentColor;">Slate viewer</a> to present with keyboard navigation, fullscreen mode, and print-to-PDF.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Prefer to paste instead of attach? Open the template in your browser, view-source (⌘⌥U / Ctrl-U), copy all, paste into chat alongside the instruction above.
+  </div>
+
+</main>
+
+<div class="toast" id="toast">Instruction copied</div>
+
+<script>
+  const copyBtn = document.getElementById('copy-btn');
+  const instruction = document.getElementById('instruction');
+  const toast = document.getElementById('toast');
+  let resetTimer;
+
+  copyBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(instruction.textContent);
+      copyBtn.classList.add('copied');
+      copyBtn.textContent = 'Copied ✓';
+      toast.classList.add('visible');
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        copyBtn.textContent = 'Copy';
+        toast.classList.remove('visible');
+      }, 2000);
+    } catch (err) {
+      const range = document.createRange();
+      range.selectNode(instruction);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+      copyBtn.textContent = 'Select + copy';
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -2,17 +2,20 @@
 
 A minimal presentation toolkit for HTML decks.
 
-Slate has two things you'll use day-to-day:
+Slate decks are single HTML files. You don't build one from scratch — you hand a template to an LLM, tell it your topic, and it adapts it.
 
-1. **Prompt page** ([`/prompt`](./prompt.html)) — a hosted form. Fill in topic, brand, accent colour, slide count → click **Copy Prompt** → paste into Claude, Cowork, ChatGPT, or any capable LLM. You'll get back a single HTML deck file.
-2. **Viewer** ([`/`](./index.html)) — drop the deck file onto the dropzone (or load it via `?deck=path`) to present it with keyboard nav, fullscreen, URL deep-links, and print-to-PDF.
+**The workflow:**
 
-That's the whole workflow: **Prompt → LLM → deck.html → Viewer**.
+1. **Start** ([`/start`](./start.html)) — download the Slate template.
+2. **LLM** — give the template + a one-line instruction to Claude, Cowork, ChatGPT, whatever. It returns a modified HTML file.
+3. **Viewer** ([`/`](./index.html)) — drop the file on the dropzone to present with keyboard nav, fullscreen, and print-to-PDF.
+
+That's it. Three steps. No install, no config, no infrastructure.
 
 Plus two optional power-user pieces:
 
-3. **Frame skill** (`skill/`) — a Claude Code skill that retrofits the viewer's nav/print chrome into any existing HTML deck so it works standalone.
-4. **MCP server** (`mcp/`) — a local MCP server for teams who want one-command deck generation from Claude Desktop / Claude Code without copy-pasting prompts.
+- **Frame skill** (`skill/`) — a Claude Code skill that retrofits the viewer's nav/print chrome into any existing HTML deck so it works standalone.
+- **MCP server** (`mcp/`) — a local MCP server for teams who want one-command deck generation from Claude Desktop / Claude Code.
 
 No framework. No build step. Just HTML.
 
@@ -127,11 +130,30 @@ Slate expects each slide as a top-level `<section>` with the class `slide`:
 
 That's the only contract. Layout everything inside each `<section>` however you like — Slate won't touch it.
 
-## How to use (with an AI)
+## How to use (template workflow)
 
-**The easy way: use the prompt page.** Open [`/prompt`](./prompt.html), fill in the fields, click **Copy Prompt**, paste into Claude / Cowork / any LLM. Save the response as `deck.html`, open in the viewer. Done.
+**The easy way: use the start page.** Open [`/start`](./start.html), download the template, give it to your LLM with the provided instruction, save the response, open it in the viewer.
 
-If you'd rather copy the prompt manually (or customise it further), the raw template is below.
+**The template is `/template.html`** — a complete, working 12-slide deck with placeholder copy in every slide type. The LLM's only job is to swap copy inside the existing `<section class="slide">` blocks, not rebuild the design.
+
+### The instruction to give the LLM
+
+```
+Adapt this Slate template to create a deck about [YOUR TOPIC].
+Audience: [WHO THE DECK IS FOR].
+Accent colour: [HEX, e.g. #3D3FB7].
+
+Keep all CSS, class names, and HTML structure exactly as-is.
+Only replace the placeholder copy inside each <section class="slide">.
+Update the <title> tag and the "STUDIO" wordmark in each slide's chrome.
+Return the complete modified HTML as a single code block.
+```
+
+That's the whole prompt you ever need. No other guardrails, no design system explanations — the template enforces the design system by existing.
+
+### If you'd rather prompt from scratch
+
+If you want the LLM to build a deck *without* the template (different aspect ratio, different slide types, whatever), the design system reference is below. Most of the time you shouldn't need this — the template is more reliable.
 
 ````
 You are creating an HTML presentation deck for Slate
@@ -238,20 +260,21 @@ See [`mcp/README.md`](./mcp/README.md) for the full tool reference, slide-type s
 
 ```
 slate/
-├── index.html               the viewer web app (served at /)
-├── prompt.html              the copy-paste prompt page (served at /prompt)
-├── skill/                   the slate-frame Claude Code skill (optional)
+├── index.html               the viewer (served at /)
+├── start.html               the "start a deck" onboarding page (served at /start)
+├── template.html            the Slate template LLMs adapt
+├── skill/                   optional: slate-frame Claude Code skill
 │   ├── SKILL.md
 │   └── assets/
 │       ├── frame.css
 │       ├── frame.js
 │       └── frame-markup.html
-├── mcp/                     the slate-mcp server (optional, advanced)
+├── mcp/                     optional: slate-mcp local MCP server
 │   ├── pyproject.toml
 │   ├── README.md
 │   └── slate_mcp/
 │       └── server.py
-└── example/                 reference deck
+└── example/                 reference deck (branded)
     ├── deck.html
     └── assets/
 ```

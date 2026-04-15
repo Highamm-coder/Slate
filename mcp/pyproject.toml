@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "slate-mcp"
+version = "0.1.0"
+description = "MCP server for Slate — generate Slate-compatible HTML decks from any MCP-aware client (Claude Desktop, Claude Code, etc.)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Deksia" }]
+dependencies = [
+  "mcp>=1.0.0",
+]
+
+[project.scripts]
+slate-mcp = "slate_mcp.server:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["slate_mcp*"]

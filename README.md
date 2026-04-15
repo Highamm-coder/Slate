@@ -2,11 +2,12 @@
 
 A minimal presentation toolkit for HTML decks.
 
-Slate is three things that work together:
+Slate is four things that work together:
 
 1. **Viewer** (`index.html`) — a standalone web app that loads any HTML deck and adds keyboard navigation, fullscreen presentation mode, URL anchor deep-linking, and print-to-PDF.
-2. **Frame skill** (`skill/`) — a Claude Code skill that injects the same frame directly into any existing HTML deck file, so it becomes self-contained.
-3. **Design system** (`example/`) — a reference deck showing the typography, color tokens, and 12 slide layouts the toolkit is built around.
+2. **MCP server** (`mcp/`) — a local server that exposes deck-creation and frame-injection tools to any MCP-aware client (Claude Desktop, Claude Code, etc.), so team members can generate Slate decks just by asking.
+3. **Frame skill** (`skill/`) — a Claude Code skill that injects the same frame directly into any existing HTML deck file, so it becomes self-contained.
+4. **Design system** (`example/`) — a reference deck showing the typography, color tokens, and 12 slide layouts the toolkit is built around.
 
 No framework. No build step. Just HTML.
 
@@ -197,11 +198,45 @@ Save the output as `deck.html` next to `index.html` (or inside the `example/` fo
 
 If you want the deck to also work standalone (without the viewer), run the `slate-frame` Claude Code skill on it — it injects the same nav/print chrome directly into the file so it's self-contained and shareable.
 
+## How to use (with the MCP server)
+
+For teams who want every member to have one-command deck generation without copy-pasting prompts, install the MCP server once and wire it into Claude Desktop or Claude Code.
+
+```bash
+cd mcp
+pip install -e .
+```
+
+Then add to Claude Desktop's config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+
+```json
+{
+  "mcpServers": {
+    "slate": {
+      "command": "slate-mcp"
+    }
+  }
+}
+```
+
+Restart Claude Desktop. Any team member can now just say:
+
+> *Make me a 10-slide Slate deck about our pricing changes, prepared for the board. Save it to my Desktop.*
+
+Claude calls `slate_create_deck` with structured slide data, the server renders a Slate-compliant HTML file with the frame baked in, and it lands on disk. No prompt copy-paste, no manual save, and iteration works (*"tighten slide 6"*, *"swap slides 3 and 5"*) because Claude can call `slate_apply_frame` or re-run `slate_create_deck` with updated input.
+
+See [`mcp/README.md`](./mcp/README.md) for the full tool reference, slide-type schema, and troubleshooting.
+
 ## Project structure
 
 ```
 slate/
 ├── index.html               the viewer web app (served at /)
+├── mcp/                     the slate-mcp server (Python)
+│   ├── pyproject.toml
+│   ├── README.md
+│   └── slate_mcp/
+│       └── server.py        tool declarations + deck renderer
 ├── skill/                   the slate-frame Claude Code skill
 │   ├── SKILL.md
 │   └── assets/

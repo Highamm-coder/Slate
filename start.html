@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Slate — Start a deck</title>
+<title>Slate — Start a slate</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -181,9 +181,9 @@
 <body>
 
 <main class="page">
-  <div class="eyebrow">Slate · Start a deck</div>
-  <h1>Make a deck.</h1>
-  <p class="lede">Slate decks are a single HTML file. You don't build one from scratch — you hand a template to an LLM, tell it your topic, and it adapts it. Three steps:</p>
+  <div class="eyebrow">Slate · Start a slate</div>
+  <h1>Make a slate.</h1>
+  <p class="lede">A slate is a single HTML file — twelve slides in one document. You don't build one from scratch; you hand a template to an LLM, tell it your topic, and it adapts it. Three steps:</p>
 
   <div class="steps">
 
@@ -191,7 +191,7 @@
       <div class="step-num">01</div>
       <div class="step-body">
         <h2>Get the template</h2>
-        <p>Download the Slate template. It's a complete, working 12-slide deck with placeholder copy in every slide type — the LLM's job is to swap the copy, not rebuild the design.</p>
+        <p>Download the Slate template. It's a complete, working twelve-slide slate with placeholder copy in every slide type — the LLM's job is to swap the copy, not rebuild the design.</p>
         <div class="actions">
           <a class="btn primary" href="template.html" download="slate-template.html">Download template</a>
           <a class="btn ghost" href="template.html" target="_blank">Preview in browser</a>
@@ -206,7 +206,7 @@
         <p>Open Claude, Cowork, ChatGPT, or any capable LLM. Attach (or paste) the template file and include a short instruction. Here's one that works:</p>
         <div class="snippet">
           <button class="copy" id="copy-btn">Copy</button>
-<span id="instruction">Adapt this Slate template to create a deck about [YOUR TOPIC].
+<span id="instruction">Adapt this Slate template to create a slate about [YOUR TOPIC].
 Audience: [WHO THE DECK IS FOR].
 Accent colour: [HEX, e.g. #3D3FB7].
 Brand wordmark: [e.g. DEKSIA — replaces "STUDIO" in every slide's chrome].
@@ -236,7 +236,7 @@ Return the complete modified HTML as a single code block.</span>
       <div class="step-num">03</div>
       <div class="step-body">
         <h2>Save and present</h2>
-        <p>Save the LLM's response as <code>deck.html</code> and either open it directly in a browser, or drop it on the <a href="index.html" style="color:var(--accent);text-decoration:none;border-bottom:1px solid currentColor;">Slate viewer</a> to present with keyboard navigation, fullscreen mode, and print-to-PDF.</p>
+        <p>Save the LLM's response as <code>slate.html</code> and either open it directly in a browser, or drop it on the <a href="index.html" style="color:var(--accent);text-decoration:none;border-bottom:1px solid currentColor;">Slate viewer</a> to present with keyboard navigation, fullscreen mode, and print-to-PDF.</p>
       </div>
     </div>
 

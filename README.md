@@ -1,8 +1,8 @@
 # Slate
 
-A minimal presentation toolkit for HTML decks.
+A minimal presentation toolkit for HTML slates.
 
-Slate decks are single HTML files. You don't build one from scratch — you hand a template to an LLM, tell it your topic, and it adapts it.
+A **slate** is a single HTML file — twelve slides in one document. You don't build one from scratch; you hand a template to an LLM, tell it your topic, and it adapts it.
 
 **The workflow:**
 
@@ -14,34 +14,34 @@ That's it. Three steps. No install, no config, no infrastructure.
 
 Plus two optional power-user pieces:
 
-- **Frame skill** (`skill/`) — a Claude Code skill that retrofits the viewer's nav/print chrome into any existing HTML deck so it works standalone.
-- **MCP server** (`mcp/`) — a local MCP server for teams who want one-command deck generation from Claude Desktop / Claude Code.
+- **Frame skill** (`skill/`) — a Claude Code skill that retrofits the viewer's nav/print chrome into any existing HTML slate so it works standalone.
+- **MCP server** (`mcp/`) — a local MCP server for teams who want one-command slate generation from Claude Desktop / Claude Code.
 
 No framework. No build step. Just HTML.
 
 ## Why
 
-Decks are either locked into proprietary editors (Keynote, Google Slides, PowerPoint) or scattered across heavyweight web frameworks (reveal.js, Slides.com). Slate is for the case where you want:
+Presentation software is either locked into proprietary editors (Keynote, Google Slides, PowerPoint) or scattered across heavyweight web frameworks (reveal.js, Slides.com). Slate is for the case where you want:
 
-- A deck that lives in a Git repo, versioned like code
-- A deck that's a single shareable link or file
-- A deck that prints to a proper PDF without fighting the browser
-- A deck that stays out of the way during a live pitch
+- A slate that lives in a Git repo, versioned like code
+- A slate that's a single shareable link or file
+- A slate that prints to a proper PDF without fighting the browser
+- A slate that stays out of the way during a live pitch
 
 The frame is ~12 KB of vanilla CSS + JS. It does one thing well.
 
 ## The Viewer
 
-Open the deployed URL (or `index.html` locally) and drop any deck file onto it. Or pass a path as a URL parameter:
+Open the deployed URL (or `index.html` locally) and drop any slate file onto it. Or pass a path as a URL parameter:
 
 ```
 /            → dropzone
-/?deck=example/deck.html            → loads the reference deck
+/?deck=example/deck.html            → loads the reference slate
 /?deck=example/deck.html#slide-7    → deep-links to slide 7
-/example/deck.html                  → raw deck, viewable on its own
+/example/deck.html                  → raw slate, viewable on its own
 ```
 
-The viewer parses the deck's HTML, extracts every `<section class="slide">` element, and supplies the chrome on top.
+The viewer parses the slate's HTML, extracts every `<section class="slide">` element, and supplies the chrome on top.
 
 Features:
 - **Auto-hiding nav**: prev/next/counter pill, bottom-right, fades out after 2.4s idle
@@ -50,14 +50,14 @@ Features:
 - **Keyboard nav**: `←` `→` `↑` `↓` `Space` `PageUp` `PageDown` `Home` `End`
 - **URL anchors**: `#slide-5` deep-links to slide 5; URL updates as you navigate
 - **Print to PDF** (`P`): one slide per page with backgrounds and colors preserved
-- **Recent decks**: localStorage list of decks loaded by URL
+- **Recent slates**: localStorage list of slates loaded by URL
 - **Drag & drop**: any `.html` file onto the dropzone
 
 For `?deck=` URL loading to work, the files need to be served over HTTP (a deployed Vercel / Netlify / GitHub Pages build, or `python3 -m http.server` locally). Browsers block `fetch()` across `file://` paths, so local opens only support drag-and-drop and the file picker — not `?deck=` URLs.
 
 ## The Frame Skill
 
-For Claude Code users. If you already have an HTML deck and want the viewer's frame baked in so the file is self-contained, use the `slate-frame` skill.
+For Claude Code users. If you already have an HTML slate and want the viewer's frame baked in so the file is self-contained, use the `slate-frame` skill.
 
 **Install:**
 ```bash
@@ -65,7 +65,7 @@ cp -r skill ~/.claude/skills/slate-frame
 ```
 
 **Use** (from Claude Code):
-> "Slate-frame this deck: `./my-deck.html`"
+> "Slate-frame this slate: `./my-slate.html`"
 
 The skill injects a single grep-able block:
 
@@ -77,11 +77,11 @@ The skill injects a single grep-able block:
 <!-- slate-frame:end -->
 ```
 
-before `</body>`. Re-running updates the block in place. Deletion is a two-marker find-and-delete. All classes are namespaced `.dfnav-*` so the frame won't collide with the deck's own styles.
+before `</body>`. Re-running updates the block in place. Deletion is a two-marker find-and-delete. All classes are namespaced `.dfnav-*` so the frame won't collide with the slate's own styles.
 
 ## The Design System
 
-The `example/` folder contains a reference 12-slide deck built on the Slate aesthetic:
+The `example/` folder contains a reference twelve-slide slate built on the Slate aesthetic:
 
 | # | Type | Background |
 |---|------|------------|
@@ -104,7 +104,7 @@ Non-negotiables:
 - **Chrome**: Every slide has the same bottom-left mark + page counter. Consistency sells the system.
 - **Rule lines**: Hairline (0.6px) horizontal rules as dividers, not boxes or borders.
 
-## How decks need to be structured
+## How slates need to be structured
 
 Slate expects each slide as a top-level `<section>` with the class `slide`:
 
@@ -112,7 +112,7 @@ Slate expects each slide as a top-level `<section>` with the class `slide`:
 <!DOCTYPE html>
 <html>
 <head>
-  <title>My Deck</title>
+  <title>My Slate</title>
   <style>
     /* your design system */
     .slide { aspect-ratio: 16/9; … }
@@ -134,12 +134,12 @@ That's the only contract. Layout everything inside each `<section>` however you 
 
 **The easy way: use the start page.** Open [`/start`](./start.html), download the template, give it to your LLM with the provided instruction, save the response, open it in the viewer.
 
-**The template is `/template.html`** — a complete, working 12-slide deck with placeholder copy in every slide type. The LLM's only job is to swap copy inside the existing `<section class="slide">` blocks, not rebuild the design.
+**The template is `/template.html`** — a complete, working twelve-slide slate with placeholder copy in every slide type. The LLM's only job is to swap copy inside the existing `<section class="slide">` blocks, not rebuild the design.
 
 ### The instruction to give the LLM
 
 ```
-Adapt this Slate template to create a deck about [YOUR TOPIC].
+Adapt this Slate template to create a slate about [YOUR TOPIC].
 Audience: [WHO THE DECK IS FOR].
 Accent colour: [HEX, e.g. #3D3FB7].
 Brand wordmark: [e.g. DEKSIA — replaces "STUDIO" in every slide's chrome].
@@ -163,17 +163,17 @@ KEEP EXACTLY AS-IS:
 Return the complete modified HTML as a single code block.
 ```
 
-The **YOU MAY CHANGE** list is what makes each deck distinct — accent colour, brand, slide mix, and copy. Everything else is pinned so Slate decks stay recognisable across teams and projects.
+The **YOU MAY CHANGE** list is what makes each slate distinct — accent colour, brand, slide mix, and copy. Everything else is pinned so slates stay recognisable across teams and projects.
 
 ### If you'd rather prompt from scratch
 
-If you want the LLM to build a deck *without* the template (different aspect ratio, different slide types, whatever), the design system reference is below. Most of the time you shouldn't need this — the template is more reliable.
+If you want the LLM to build a slate *without* the template (different aspect ratio, different slide types, whatever), the design system reference is below. Most of the time you shouldn't need this — the template is more reliable.
 
 ````
-You are creating an HTML presentation deck for Slate
+You are creating an HTML slate for Slate
 (https://github.com/Highamm-coder/Slate).
 
-TOPIC: [what the deck is about — one or two sentences]
+TOPIC: [what the slate is about — one or two sentences]
 BRAND / WORDMARK: [your name or studio, shown in the chrome]
 ACCENT COLOR (hex): [e.g. #3D3FB7]
 SLIDE COUNT: [e.g. 12]
@@ -234,16 +234,16 @@ OUTPUT
 Return the complete HTML file as a single code block. Nothing else.
 ````
 
-Save the output as `deck.html` next to `index.html` (or inside the `example/` folder), then:
+Save the output as `slate.html` next to `index.html` (or inside the `example/` folder), then:
 
-- **Locally**: open `index.html`, drag `deck.html` onto the dropzone.
-- **Deployed**: visit `yourslatedomain.com/?deck=deck.html`.
+- **Locally**: open `index.html`, drag `slate.html` onto the dropzone.
+- **Deployed**: visit `yourslatedomain.com/?deck=slate.html`.
 
-If you want the deck to also work standalone (without the viewer), run the `slate-frame` Claude Code skill on it — it injects the same nav/print chrome directly into the file so it's self-contained and shareable.
+If you want the slate to also work standalone (without the viewer), run the `slate-frame` Claude Code skill on it — it injects the same nav/print chrome directly into the file so it's self-contained and shareable.
 
 ## How to use (with the MCP server)
 
-For teams who want every member to have one-command deck generation without copy-pasting prompts, install the MCP server once and wire it into Claude Desktop or Claude Code.
+For teams who want every member to have one-command slate generation without copy-pasting prompts, install the MCP server once and wire it into Claude Desktop or Claude Code.
 
 ```bash
 cd mcp
@@ -264,7 +264,7 @@ Then add to Claude Desktop's config (`~/Library/Application Support/Claude/claud
 
 Restart Claude Desktop. Any team member can now just say:
 
-> *Make me a 10-slide Slate deck about our pricing changes, prepared for the board. Save it to my Desktop.*
+> *Make me a ten-slide slate about our pricing changes, prepared for the board. Save it to my Desktop.*
 
 Claude calls `slate_create_deck` with structured slide data, the server renders a Slate-compliant HTML file with the frame baked in, and it lands on disk. No prompt copy-paste, no manual save, and iteration works (*"tighten slide 6"*, *"swap slides 3 and 5"*) because Claude can call `slate_apply_frame` or re-run `slate_create_deck` with updated input.
 
@@ -275,7 +275,7 @@ See [`mcp/README.md`](./mcp/README.md) for the full tool reference, slide-type s
 ```
 slate/
 ├── index.html               the viewer (served at /)
-├── start.html               the "start a deck" onboarding page (served at /start)
+├── start.html               the "start a slate" onboarding page (served at /start)
 ├── template.html            the Slate template LLMs adapt
 ├── skill/                   optional: slate-frame Claude Code skill
 │   ├── SKILL.md
@@ -288,7 +288,7 @@ slate/
 │   ├── README.md
 │   └── slate_mcp/
 │       └── server.py
-└── example/                 reference deck (branded)
+└── example/                 reference slate (branded)
     ├── deck.html
     └── assets/
 ```

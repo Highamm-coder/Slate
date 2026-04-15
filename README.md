@@ -110,7 +110,7 @@ Slate expects each slide as a top-level `<section>` with the class `slide`:
   </style>
 </head>
 <body>
-  <main>
+  <main class="gallery">
     <section class="slide">Slide 1 content</section>
     <section class="slide">Slide 2 content</section>
     <section class="slide">Slide 3 content</section>
@@ -120,6 +120,82 @@ Slate expects each slide as a top-level `<section>` with the class `slide`:
 ```
 
 That's the only contract. Layout everything inside each `<section>` however you like — Slate won't touch it.
+
+## How to use (with an AI)
+
+The fastest way to get a Slate-compatible deck is to have an AI generate one. Copy the prompt below, fill in the bracketed fields, and paste it into Claude, ChatGPT, or any capable LLM. You'll get back a single HTML file you can save as `deck.html` and open in Slate.
+
+````
+You are creating an HTML presentation deck for Slate
+(https://github.com/Highamm-coder/Slate).
+
+TOPIC: [what the deck is about — one or two sentences]
+BRAND / WORDMARK: [your name or studio, shown in the chrome]
+ACCENT COLOR (hex): [e.g. #3D3FB7]
+SLIDE COUNT: [e.g. 12]
+CONTENT: [paste your copy here, OR write: "generate placeholder copy on the topic above"]
+
+STRUCTURE
+- Output a single self-contained HTML file (no external files, no build step).
+- Every slide is a top-level <section class="slide"> inside <main class="gallery">.
+- 16:9 aspect ratio per slide: aspect-ratio: 16/9; container-type: inline-size.
+- No navigation, no keyboard handlers, no print styles — Slate's viewer adds those.
+
+TYPOGRAPHY
+- Inter only, loaded from Google Fonts. Weights 400, 500, 600, 700.
+- Sizes in cqw (container query width) so slides scale proportionally.
+- Headlines: 600 weight, letter-spacing -0.022em, line-height 1.02–1.10.
+- Eyebrows / small labels: 500 weight, letter-spacing 0.22em, UPPERCASE.
+- Body: 400 weight, line-height 1.55, color muted (not pure black).
+- Use <em> for emphasis, styled as non-italic, 500 weight, in the accent color.
+
+COLOR
+- Light slides: white (#FFFFFF) background, dark ink (~#121332).
+- Dark slides: a darkened version of the accent (~15% luminance) as background,
+  off-white ink (~#F2F1EC). Alternate light and dark slides for rhythm.
+- Hairline dividers only (0.6px rules). No cards, no thick borders, no shadows
+  on text, no decorative gradients.
+
+CHROME (applied to every slide)
+- Top meta row: uppercase eyebrow on the left (accent color), section label on
+  the right (faint ink), hairline rule below.
+- Bottom chrome: accent-colored dot + brand wordmark on the left, page number
+  "NN / TOTAL" on the right. Both in very small uppercase letter-spaced type.
+
+SLIDE TYPES (pick a mix that fits the content; don't use all if unnecessary)
+1.  Title — bold headline, short subtitle, 3-column meta strip (prepared by /
+    for / date). Often on a dark or gradient-style background.
+2.  Agenda — 2×2 grid of numbered sections with title + one-line description.
+3.  Statement — single large pull-quote on a dark slide.
+4.  Two-column context — side-by-side headings + paragraphs.
+5.  Narrative — two columns of dense body copy with small subheads. Use for
+    context-heavy slides.
+6.  Stats — three big numbers with labels + short descriptions.
+7.  Principles — three indexed rows on dark: "P · 01", title, description.
+8.  Methodology — up to five numbered stages, each with step label + title +
+    body paragraph.
+9.  Quote — large pull-quote in the ink color with attribution line.
+10. Case study — narrative column + three inline proof stats.
+11. Deliverables — 2×3 grid of numbered items with title + description.
+12. Close — big headline + short body + a CTA pill button + contact block.
+    Often on a dark background.
+
+AVOID
+- Frameworks, build tools, or npm packages.
+- Navigation controls, fragment animations, or scroll-triggered reveals.
+- Shadows on text, gradients as decoration, drop caps, rounded thick borders.
+- Replacing Inter with another font.
+
+OUTPUT
+Return the complete HTML file as a single code block. Nothing else.
+````
+
+Save the output as `deck.html` next to `index.html` (or inside the `example/` folder), then:
+
+- **Locally**: open `index.html`, drag `deck.html` onto the dropzone.
+- **Deployed**: visit `yourslatedomain.com/?deck=deck.html`.
+
+If you want the deck to also work standalone (without the viewer), run the `slate-frame` Claude Code skill on it — it injects the same nav/print chrome directly into the file so it's self-contained and shareable.
 
 ## Project structure
 

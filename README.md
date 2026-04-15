@@ -2,12 +2,17 @@
 
 A minimal presentation toolkit for HTML decks.
 
-Slate is four things that work together:
+Slate has two things you'll use day-to-day:
 
-1. **Viewer** (`index.html`) — a standalone web app that loads any HTML deck and adds keyboard navigation, fullscreen presentation mode, URL anchor deep-linking, and print-to-PDF.
-2. **MCP server** (`mcp/`) — a local server that exposes deck-creation and frame-injection tools to any MCP-aware client (Claude Desktop, Claude Code, etc.), so team members can generate Slate decks just by asking.
-3. **Frame skill** (`skill/`) — a Claude Code skill that injects the same frame directly into any existing HTML deck file, so it becomes self-contained.
-4. **Design system** (`example/`) — a reference deck showing the typography, color tokens, and 12 slide layouts the toolkit is built around.
+1. **Prompt page** ([`/prompt`](./prompt.html)) — a hosted form. Fill in topic, brand, accent colour, slide count → click **Copy Prompt** → paste into Claude, Cowork, ChatGPT, or any capable LLM. You'll get back a single HTML deck file.
+2. **Viewer** ([`/`](./index.html)) — drop the deck file onto the dropzone (or load it via `?deck=path`) to present it with keyboard nav, fullscreen, URL deep-links, and print-to-PDF.
+
+That's the whole workflow: **Prompt → LLM → deck.html → Viewer**.
+
+Plus two optional power-user pieces:
+
+3. **Frame skill** (`skill/`) — a Claude Code skill that retrofits the viewer's nav/print chrome into any existing HTML deck so it works standalone.
+4. **MCP server** (`mcp/`) — a local MCP server for teams who want one-command deck generation from Claude Desktop / Claude Code without copy-pasting prompts.
 
 No framework. No build step. Just HTML.
 
@@ -124,7 +129,9 @@ That's the only contract. Layout everything inside each `<section>` however you 
 
 ## How to use (with an AI)
 
-The fastest way to get a Slate-compatible deck is to have an AI generate one. Copy the prompt below, fill in the bracketed fields, and paste it into Claude, ChatGPT, or any capable LLM. You'll get back a single HTML file you can save as `deck.html` and open in Slate.
+**The easy way: use the prompt page.** Open [`/prompt`](./prompt.html), fill in the fields, click **Copy Prompt**, paste into Claude / Cowork / any LLM. Save the response as `deck.html`, open in the viewer. Done.
+
+If you'd rather copy the prompt manually (or customise it further), the raw template is below.
 
 ````
 You are creating an HTML presentation deck for Slate
@@ -232,20 +239,21 @@ See [`mcp/README.md`](./mcp/README.md) for the full tool reference, slide-type s
 ```
 slate/
 ├── index.html               the viewer web app (served at /)
-├── mcp/                     the slate-mcp server (Python)
-│   ├── pyproject.toml
-│   ├── README.md
-│   └── slate_mcp/
-│       └── server.py        tool declarations + deck renderer
-├── skill/                   the slate-frame Claude Code skill
+├── prompt.html              the copy-paste prompt page (served at /prompt)
+├── skill/                   the slate-frame Claude Code skill (optional)
 │   ├── SKILL.md
 │   └── assets/
 │       ├── frame.css
 │       ├── frame.js
 │       └── frame-markup.html
+├── mcp/                     the slate-mcp server (optional, advanced)
+│   ├── pyproject.toml
+│   ├── README.md
+│   └── slate_mcp/
+│       └── server.py
 └── example/                 reference deck
     ├── deck.html
-    └── assets/              gradient images + logo
+    └── assets/
 ```
 
 ## Credits

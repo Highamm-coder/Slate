@@ -142,14 +142,28 @@ That's the only contract. Layout everything inside each `<section>` however you 
 Adapt this Slate template to create a deck about [YOUR TOPIC].
 Audience: [WHO THE DECK IS FOR].
 Accent colour: [HEX, e.g. #3D3FB7].
+Brand wordmark: [e.g. DEKSIA — replaces "STUDIO" in every slide's chrome].
 
-Keep all CSS, class names, and HTML structure exactly as-is.
-Only replace the placeholder copy inside each <section class="slide">.
-Update the <title> tag and the "STUDIO" wordmark in each slide's chrome.
+YOU MAY CHANGE:
+— The three colour variables in :root (--accent, --accent-soft, --slide-bg-dark).
+— The <title> tag and the "STUDIO" wordmark in every chrome.
+— The number, order, and mix of slide types — add, remove, or reorder
+  <section class="slide"> blocks to fit the story.
+— All copy inside each slide (headlines, body, labels, stats, quotes, attribution).
+
+KEEP EXACTLY AS-IS:
+— Every CSS rule below the :root block — typography, layout, chrome, meta row,
+  and all slide-type styles.
+— Every class name (.slide, .dark, .eyebrow, .meta-row, .chrome, .inner, etc.).
+— The 16:9 aspect ratio and the cqw sizing system.
+— Inter as the only font.
+— The hairline-rule dividers (no cards, no thick borders, no shadows on text).
+— The bottom chrome on every slide and the meta row on every non-title slide.
+
 Return the complete modified HTML as a single code block.
 ```
 
-That's the whole prompt you ever need. No other guardrails, no design system explanations — the template enforces the design system by existing.
+The **YOU MAY CHANGE** list is what makes each deck distinct — accent colour, brand, slide mix, and copy. Everything else is pinned so Slate decks stay recognisable across teams and projects.
 
 ### If you'd rather prompt from scratch
 

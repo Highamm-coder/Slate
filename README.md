@@ -4,7 +4,7 @@ A minimal presentation toolkit for HTML decks.
 
 Slate is three things that work together:
 
-1. **Viewer** (`viewer.html`) — a standalone web app that loads any HTML deck and adds keyboard navigation, fullscreen presentation mode, URL anchor deep-linking, and print-to-PDF.
+1. **Viewer** (`index.html`) — a standalone web app that loads any HTML deck and adds keyboard navigation, fullscreen presentation mode, URL anchor deep-linking, and print-to-PDF.
 2. **Frame skill** (`skill/`) — a Claude Code skill that injects the same frame directly into any existing HTML deck file, so it becomes self-contained.
 3. **Design system** (`example/`) — a reference deck showing the typography, color tokens, and 12 slide layouts the toolkit is built around.
 
@@ -23,10 +23,13 @@ The frame is ~12 KB of vanilla CSS + JS. It does one thing well.
 
 ## The Viewer
 
-Open `viewer.html` and drop any deck file onto it. Or pass a path as a URL parameter:
+Open the deployed URL (or `index.html` locally) and drop any deck file onto it. Or pass a path as a URL parameter:
 
 ```
-viewer.html?deck=./example/deck.html
+/            → dropzone
+/?deck=example/deck.html            → loads the reference deck
+/?deck=example/deck.html#slide-7    → deep-links to slide 7
+/example/deck.html                  → raw deck, viewable on its own
 ```
 
 The viewer parses the deck's HTML, extracts every `<section class="slide">` element, and supplies the chrome on top.
@@ -41,14 +44,7 @@ Features:
 - **Recent decks**: localStorage list of decks loaded by URL
 - **Drag & drop**: any `.html` file onto the dropzone
 
-For `?deck=` URL loading to work, serve the folder over HTTP:
-
-```bash
-python3 -m http.server
-# then open http://localhost:8000/viewer.html?deck=./example/deck.html
-```
-
-(Local `file://` loading works via drag-and-drop or the file picker, but browsers block `fetch()` across local files.)
+For `?deck=` URL loading to work, the files need to be served over HTTP (a deployed Vercel / Netlify / GitHub Pages build, or `python3 -m http.server` locally). Browsers block `fetch()` across `file://` paths, so local opens only support drag-and-drop and the file picker — not `?deck=` URLs.
 
 ## The Frame Skill
 
@@ -129,7 +125,7 @@ That's the only contract. Layout everything inside each `<section>` however you 
 
 ```
 slate/
-├── viewer.html              the viewer web app
+├── index.html               the viewer web app (served at /)
 ├── skill/                   the slate-frame Claude Code skill
 │   ├── SKILL.md
 │   └── assets/

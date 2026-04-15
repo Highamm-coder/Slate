@@ -1,0 +1,119 @@
+/* ==================================================================
+   Slate — frame v1 (injected by the slate-frame skill)
+   Provides: keyboard/click nav, URL anchors, print-to-PDF, scroll-snap.
+   Namespaced .dfnav-* to avoid collisions with host deck styles.
+   ================================================================== */
+
+html{scroll-behavior:smooth;scroll-snap-type:y mandatory;}
+
+/* Scroll-snap on slide containers (.slide is the assumed selector) */
+.slide{scroll-snap-align:center;scroll-margin-top:40px;}
+
+/* --- NAVIGATION (minimal, auto-hiding) ---------------------------- */
+.dfnav{
+  position:fixed;right:20px;bottom:20px;
+  display:flex;align-items:center;gap:6px;
+  z-index:100;
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  user-select:none;
+  opacity:0;transform:translateY(6px);
+  transition:opacity .35s ease,transform .35s ease;
+  pointer-events:none;
+}
+.dfnav.dfnav-visible{opacity:1;transform:translateY(0);pointer-events:auto;}
+.dfnav-btn{
+  width:28px;height:28px;border:none;border-radius:50%;
+  background:rgba(18,19,50,0.75);color:#F2F1EC;
+  cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:14px;line-height:1;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  box-shadow:0 2px 8px rgba(18,19,50,0.25);
+  transition:background .15s ease,transform .15s ease,opacity .15s ease;
+}
+.dfnav-btn:hover{background:rgba(18,19,50,0.95);}
+.dfnav-btn:active{transform:scale(.9);}
+.dfnav-btn:disabled{opacity:.25;cursor:not-allowed;}
+.dfnav-count{
+  min-width:44px;text-align:center;
+  font-size:10px;font-variant-numeric:tabular-nums;letter-spacing:.14em;
+  padding:6px 10px;
+  background:rgba(18,19,50,0.75);color:#F2F1EC;
+  border-radius:999px;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  box-shadow:0 2px 8px rgba(18,19,50,0.25);
+  opacity:0;transition:opacity .2s ease,background .15s ease;
+  cursor:help;outline:none;
+}
+.dfnav.dfnav-visible .dfnav-count{opacity:1;}
+.dfnav-count:hover,.dfnav-count:focus-visible{background:rgba(18,19,50,0.95);}
+
+/* Tiny help toggle — always visible, very low opacity until hover */
+.dfnav-help{
+  position:fixed;right:24px;bottom:24px;
+  width:24px;height:24px;border:none;border-radius:50%;
+  background:rgba(18,19,50,0.55);color:#F2F1EC;
+  cursor:pointer;
+  font-size:11px;font-weight:500;line-height:1;
+  display:inline-flex;align-items:center;justify-content:center;
+  z-index:99;
+  opacity:.35;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  transition:opacity .2s ease,background .15s ease;
+}
+.dfnav-help:hover{opacity:1;background:rgba(18,19,50,0.85);}
+.dfnav.dfnav-visible ~ .dfnav-help{opacity:0;pointer-events:none;}
+.dfnav-help-panel{
+  position:fixed;right:20px;bottom:60px;z-index:101;
+  font-family:'Inter',system-ui,sans-serif;font-size:11px;letter-spacing:.04em;
+  color:#F2F1EC;
+  padding:12px 14px;
+  background:rgba(18,19,50,0.95);border-radius:10px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  box-shadow:0 8px 24px -8px rgba(18,19,50,0.4);
+  display:none;line-height:1.55;min-width:180px;
+}
+.dfnav-help-panel.dfnav-open{display:block;}
+.dfnav-help-panel kbd{
+  display:inline-block;padding:1px 6px;margin:0 2px;
+  font-family:'Inter',system-ui,sans-serif;font-size:10px;font-weight:500;
+  background:rgba(255,255,255,0.12);border-radius:4px;letter-spacing:.02em;
+}
+.dfnav-help-panel .dfnav-row{display:flex;justify-content:space-between;gap:16px;margin-bottom:4px;}
+.dfnav-help-panel .dfnav-row:last-child{margin-bottom:0;}
+.dfnav-help-panel .dfnav-row span:first-child{opacity:.7;}
+
+@media (max-width:720px){
+  .dfnav{right:12px;bottom:12px;}
+}
+
+/* --- PRINT / PDF EXPORT ------------------------------------------- */
+/* Force color + background image rendering; force one slide per page. */
+@media print{
+  @page{size:1400px 787px;margin:0;}
+  *,*::before,*::after{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+    color-adjust:exact !important;
+  }
+  html,body{
+    background:#fff !important;padding:0 !important;margin:0 !important;
+    scroll-snap-type:none !important;width:1400px;
+  }
+  .dfnav,.dfnav-help,.dfnav-help-panel{display:none !important;}
+  .slide{
+    width:1400px !important;height:787px !important;
+    aspect-ratio:auto !important;
+    border-radius:0 !important;box-shadow:none !important;
+    page-break-after:always !important;page-break-inside:avoid !important;
+    break-after:page !important;break-inside:avoid !important;
+    opacity:1 !important;transform:none !important;
+    overflow:hidden !important;
+  }
+  .slide:last-child{page-break-after:auto !important;}
+  .slide .bg{
+    display:block !important;position:absolute !important;inset:0 !important;
+    background-size:cover !important;background-position:center !important;
+  }
+  img{max-width:none !important;}
+}

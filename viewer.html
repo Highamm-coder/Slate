@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en" class="v-shell">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Slate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ================================================================
+     Deck Viewer — loads any HTML deck (with <section class="slide">)
+     and supplies the full nav frame + print stylesheet.
+     ================================================================ */
+
+  :root{
+    /* Empty state takes the deck's clean off-white aesthetic. The dark
+       nav/topbar pills still work visually over any loaded deck. */
+    --vbg:#EEECE6;
+    --vbg-soft:#F5F4EF;
+    --vink:#121332;
+    --vink-muted:#585B7A;
+    --vink-faint:#9A9CB3;
+    --vaccent:#3D3FB7;
+    --vaccent-soft:#A8AAEB;
+    --vrule:rgba(18,19,50,0.09);
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;scroll-snap-type:y mandatory;}
+  /* The viewer's shell styles use !important as a safety net against
+     injected deck stylesheets that might re-declare body/html rules. */
+  html.v-shell,body.v-shell{
+    background:var(--vbg) !important;
+    padding:0 !important;
+    margin:0 !important;
+  }
+  body{
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:var(--vbg);
+    color:var(--vink);
+    min-height:100vh;
+    font-feature-settings:"ss01","cv11";
+  }
+
+  /* --- EMPTY STATE (deck aesthetic: clean, typography-first) ------ */
+  .empty{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:80px 32px;
+    transition:background .2s ease;
+  }
+  .empty.hidden{display:none;}
+  .empty.drag-over{
+    background:rgba(61,63,183,0.04);
+  }
+  .empty-card{
+    width:100%;
+    max-width:540px;
+    padding:0;
+    background:transparent;
+    border:none;
+    text-align:left;
+  }
+  .empty-eyebrow{
+    font-size:10px;font-weight:500;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--vaccent);
+    margin-bottom:24px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .empty-eyebrow::before{
+    content:'';display:inline-block;
+    width:5px;height:5px;border-radius:50%;background:var(--vaccent);
+  }
+  .empty-title{
+    font-size:46px;font-weight:600;letter-spacing:-.024em;
+    line-height:1.02;margin-bottom:16px;
+    color:var(--vink);
+  }
+  .empty-sub{
+    font-size:15px;line-height:1.6;color:var(--vink-muted);
+    margin-bottom:36px;
+    max-width:440px;
+  }
+  .empty-actions{
+    display:flex;gap:8px;flex-wrap:wrap;
+  }
+  .empty-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:11px 20px;
+    background:var(--vaccent);color:#fff;
+    border:none;border-radius:2px;
+    font-family:'Inter',sans-serif;font-size:13px;font-weight:500;
+    letter-spacing:.01em;cursor:pointer;
+    transition:background .15s ease,transform .15s ease;
+  }
+  .empty-btn:hover{background:#4E50C9;}
+  .empty-btn:active{transform:scale(.98);}
+  .empty-btn.ghost{
+    background:transparent;
+    color:var(--vink);
+    border:1px solid var(--vrule);
+  }
+  .empty-btn.ghost:hover{
+    border-color:var(--vink);
+    background:transparent;
+  }
+  .empty-hint{
+    margin-top:28px;
+    font-size:11px;letter-spacing:.04em;color:var(--vink-faint);
+    line-height:1.6;
+  }
+  .empty-hint code{
+    font-family:'Inter',sans-serif;font-weight:500;
+    padding:1px 6px;background:rgba(18,19,50,0.06);
+    color:var(--vink-muted);
+    border-radius:3px;letter-spacing:.02em;
+  }
+  .recent{
+    margin-top:56px;padding-top:24px;
+    border-top:1px solid var(--vrule);
+    text-align:left;
+  }
+  .recent-label{
+    font-size:10px;font-weight:500;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--vink-faint);
+    margin-bottom:8px;
+  }
+  .recent-list{display:flex;flex-direction:column;gap:0;}
+  .recent-item{
+    display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+    padding:12px 0;
+    border-bottom:1px solid var(--vrule);
+    font-size:13px;color:var(--vink-muted);
+    cursor:pointer;
+    transition:color .15s ease;
+    border-left:none;border-right:none;border-top:none;
+    background:transparent;width:100%;text-align:left;
+    font-family:'Inter',sans-serif;
+  }
+  .recent-item:last-child{border-bottom:none;}
+  .recent-item:hover{color:var(--vaccent);}
+  .recent-item .name{
+    flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    font-weight:500;color:inherit;
+  }
+  .recent-item .meta{
+    font-size:10px;color:var(--vink-faint);
+    font-variant-numeric:tabular-nums;
+    letter-spacing:.08em;text-transform:uppercase;
+  }
+
+  /* --- LOADED STATE (deck stage) ---------------------------------- */
+  .stage{
+    display:none;
+    padding:56px 24px 140px;
+    min-height:100vh;
+  }
+  .stage.visible{display:block;}
+  .gallery{
+    max-width:1400px;
+    margin:0 auto;
+    display:flex;flex-direction:column;
+    gap:32px;
+  }
+  /* Injected slides: we DON'T override their styles; we just add scroll-snap
+     and a safety shadow/radius in case the deck didn't ship with one. */
+  .gallery > .slide{
+    scroll-snap-align:center;
+    scroll-margin-top:40px;
+  }
+
+  /* --- FULLSCREEN MODE -------------------------------------------- */
+  /* When the document is in fullscreen, maximise each slide: one per
+     viewport, no padding, no gap, no decoration around the slides. */
+  :fullscreen .stage,
+  :-webkit-full-screen .stage{
+    padding:0 !important;min-height:100vh;background:#000;
+  }
+  :fullscreen .gallery,
+  :-webkit-full-screen .gallery{
+    max-width:none !important;gap:0 !important;margin:0 !important;
+  }
+  :fullscreen .gallery > .slide,
+  :-webkit-full-screen .gallery > .slide{
+    width:100vw !important;
+    height:100vh !important;
+    aspect-ratio:auto !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+    scroll-snap-align:center !important;
+  }
+  /* True presentation: hide the topbar entirely in fullscreen. Nav
+     (bottom-right) stays for navigation controls. */
+  :fullscreen .topbar,
+  :-webkit-full-screen .topbar{display:none !important;}
+  :fullscreen .stage,
+  :-webkit-full-screen .stage{padding-top:0 !important;}
+
+  /* --- TOPBAR (minimal floating chips, auto-hide) ----------------- */
+  .topbar{
+    position:fixed;top:16px;left:20px;right:20px;
+    z-index:90;
+    display:none;
+    align-items:center;justify-content:space-between;
+    gap:12px;
+    pointer-events:none;
+    opacity:0;
+    transform:translateY(-6px);
+    transition:opacity .35s ease,transform .35s ease;
+  }
+  .topbar.mounted{display:flex;}
+  .topbar.visible{opacity:1;transform:translateY(0);}
+  .topbar > *{pointer-events:auto;}
+  .topbar-title{
+    font-size:11px;font-weight:500;letter-spacing:.04em;
+    color:#F2F1EC;
+    display:flex;align-items:center;gap:8px;
+    padding:6px 12px;
+    background:rgba(18,19,50,0.75);
+    border-radius:999px;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    box-shadow:0 2px 8px rgba(18,19,50,0.25);
+    max-width:60vw;
+  }
+  .topbar-title .dot{
+    flex:0 0 auto;
+    width:5px;height:5px;border-radius:50%;background:var(--vaccent-soft);
+  }
+  .topbar-title .name{
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .topbar-title .src{
+    font-variant-numeric:tabular-nums;color:rgba(242,241,236,0.55);
+    font-size:10px;letter-spacing:.02em;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    max-width:240px;
+  }
+  .topbar-actions{display:flex;gap:6px;}
+  .topbar-btn{
+    padding:6px 12px;
+    background:rgba(18,19,50,0.75);
+    color:#F2F1EC;
+    border:none;
+    border-radius:999px;
+    font-family:'Inter',sans-serif;font-size:10px;font-weight:500;
+    letter-spacing:.04em;cursor:pointer;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    box-shadow:0 2px 8px rgba(18,19,50,0.25);
+    transition:background .15s ease,transform .15s ease;
+  }
+  .topbar-btn:hover{background:rgba(18,19,50,0.95);}
+  .topbar-btn:active{transform:scale(.95);}
+  .topbar-btn.icon-btn{
+    width:28px;height:28px;padding:0;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:13px;
+  }
+
+  /* --- NAVIGATION (identical to add-deck-frame, kept in-sync) ----- */
+  .dfnav{
+    position:fixed;right:20px;bottom:20px;
+    display:flex;align-items:center;gap:6px;
+    z-index:100;
+    font-family:'Inter',sans-serif;user-select:none;
+    opacity:0;transform:translateY(6px);
+    transition:opacity .35s ease,transform .35s ease;
+    pointer-events:none;
+  }
+  .dfnav.dfnav-visible{opacity:1;transform:translateY(0);pointer-events:auto;}
+  .dfnav-btn{
+    width:28px;height:28px;border:none;border-radius:50%;
+    background:rgba(18,19,50,0.75);color:#F2F1EC;
+    cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+    font-size:14px;line-height:1;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    box-shadow:0 2px 8px rgba(18,19,50,0.25);
+    transition:background .15s ease,transform .15s ease,opacity .15s ease;
+  }
+  .dfnav-btn:hover{background:rgba(18,19,50,0.95);}
+  .dfnav-btn:active{transform:scale(.9);}
+  .dfnav-btn:disabled{opacity:.25;cursor:not-allowed;}
+  .dfnav-count{
+    min-width:44px;text-align:center;
+    font-size:10px;font-variant-numeric:tabular-nums;letter-spacing:.14em;
+    padding:6px 10px;
+    background:rgba(18,19,50,0.75);color:#F2F1EC;border-radius:999px;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    box-shadow:0 2px 8px rgba(18,19,50,0.25);
+    opacity:0;transition:opacity .2s ease,background .15s ease;
+    cursor:help;
+    outline:none;
+  }
+  .dfnav.dfnav-visible .dfnav-count{opacity:1;}
+  .dfnav-count:hover,.dfnav-count:focus-visible{background:rgba(18,19,50,0.95);}
+  .dfnav-help{
+    position:fixed;right:24px;bottom:24px;
+    width:24px;height:24px;border:none;border-radius:50%;
+    background:rgba(18,19,50,0.55);color:#F2F1EC;
+    cursor:pointer;font-size:11px;font-weight:500;line-height:1;
+    display:none;align-items:center;justify-content:center;
+    z-index:99;opacity:.35;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    transition:opacity .2s ease,background .15s ease;
+  }
+  .dfnav-help.visible{display:inline-flex;}
+  .dfnav-help:hover{opacity:1;background:rgba(18,19,50,0.85);}
+  .dfnav.dfnav-visible ~ .dfnav-help{opacity:0;pointer-events:none;}
+  .dfnav-help-panel{
+    position:fixed;right:20px;bottom:60px;z-index:101;
+    font-family:'Inter',sans-serif;font-size:11px;letter-spacing:.04em;
+    color:#F2F1EC;padding:12px 14px;
+    background:rgba(18,19,50,0.95);border-radius:10px;
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    box-shadow:0 8px 24px -8px rgba(18,19,50,0.4);
+    display:none;line-height:1.55;min-width:200px;
+  }
+  .dfnav-help-panel.dfnav-open{display:block;}
+  .dfnav-help-panel kbd{
+    display:inline-block;padding:1px 6px;margin:0 2px;
+    font-family:'Inter',sans-serif;font-size:10px;font-weight:500;
+    background:rgba(255,255,255,0.12);border-radius:4px;letter-spacing:.02em;
+  }
+  .dfnav-help-panel .dfnav-row{display:flex;justify-content:space-between;gap:16px;margin-bottom:4px;}
+  .dfnav-help-panel .dfnav-row:last-child{margin-bottom:0;}
+  .dfnav-help-panel .dfnav-row span:first-child{opacity:.7;}
+
+  /* --- ERROR BANNER ----------------------------------------------- */
+  .error{
+    position:fixed;top:20px;left:50%;transform:translateX(-50%);
+    z-index:200;
+    padding:12px 18px;background:#5A1E2A;color:#FFD2C8;
+    border-radius:10px;font-size:13px;
+    box-shadow:0 8px 24px -8px rgba(0,0,0,.4);
+    display:none;
+  }
+  .error.visible{display:block;}
+
+  /* --- PRINT ------------------------------------------------------- */
+  @media print{
+    @page{size:1400px 787px;margin:0;}
+    *,*::before,*::after{
+      -webkit-print-color-adjust:exact !important;
+      print-color-adjust:exact !important;
+      color-adjust:exact !important;
+    }
+    html,body{background:#fff !important;padding:0 !important;margin:0 !important;scroll-snap-type:none !important;width:1400px;}
+    .empty,.topbar,.dfnav,.dfnav-help,.dfnav-help-panel,.error{display:none !important;}
+    .stage{padding:0 !important;}
+    .gallery{gap:0 !important;max-width:none !important;margin:0 !important;}
+    .slide{
+      width:1400px !important;height:787px !important;
+      aspect-ratio:auto !important;
+      border-radius:0 !important;box-shadow:none !important;
+      page-break-after:always !important;break-after:page !important;
+      page-break-inside:avoid !important;break-inside:avoid !important;
+      opacity:1 !important;transform:none !important;overflow:hidden !important;
+    }
+    .slide:last-child{page-break-after:auto !important;}
+    .slide .bg{
+      display:block !important;position:absolute !important;inset:0 !important;
+      background-size:cover !important;background-position:center !important;
+    }
+    img{max-width:none !important;}
+  }
+</style>
+</head>
+<body class="v-shell">
+
+<!-- Empty state: drop zone + file picker + recent -->
+<div class="empty" id="empty">
+  <div class="empty-card" id="drop-zone">
+    <div class="empty-eyebrow">Viewer</div>
+    <h1 class="empty-title">Load a deck.</h1>
+    <p class="empty-sub">Drop an HTML file here, pick one from disk, or append <code>?deck=path.html</code> to the URL.</p>
+    <div class="empty-actions">
+      <button class="empty-btn" id="btn-pick">Pick HTML file</button>
+      <button class="empty-btn ghost" id="btn-paste-url">Load from URL</button>
+    </div>
+    <p class="empty-hint">Any deck with <code>&lt;section class="slide"&gt;</code> elements will work.</p>
+    <div class="recent" id="recent" style="display:none;">
+      <div class="recent-label">Recent</div>
+      <div class="recent-list" id="recent-list"></div>
+    </div>
+  </div>
+  <input type="file" id="file-input" accept=".html,.htm" style="display:none;">
+</div>
+
+<!-- Loaded state: topbar + deck gallery -->
+<div class="topbar" id="topbar">
+  <div class="topbar-title">
+    <span class="dot"></span>
+    <span class="name" id="topbar-name">Deck</span>
+    <span class="src" id="topbar-src"></span>
+  </div>
+  <div class="topbar-actions">
+    <button class="topbar-btn icon-btn" id="btn-fullscreen" aria-label="Fullscreen (F)" title="Fullscreen (F)">⛶</button>
+    <button class="topbar-btn" id="btn-print">Print</button>
+    <button class="topbar-btn" id="btn-change">Change</button>
+  </div>
+</div>
+
+<main class="stage" id="stage">
+  <div class="gallery" id="gallery"></div>
+</main>
+
+<!-- Nav (only shown when a deck is loaded) -->
+<nav class="dfnav" id="dfnav" aria-label="Deck navigation">
+  <button class="dfnav-btn" id="dfnav-prev" aria-label="Previous slide">‹</button>
+  <span class="dfnav-count" id="dfnav-counter" tabindex="0" aria-label="Slide counter — hover for shortcuts"><span id="dfnav-current">1</span>&nbsp;/&nbsp;<span id="dfnav-total">1</span></span>
+  <button class="dfnav-btn" id="dfnav-next" aria-label="Next slide">›</button>
+</nav>
+<button class="dfnav-help" id="dfnav-help" aria-label="Keyboard shortcuts">?</button>
+<div class="dfnav-help-panel" id="dfnav-help-panel" role="dialog">
+  <div class="dfnav-row"><span>Next / Prev</span><span><kbd>←</kbd><kbd>→</kbd></span></div>
+  <div class="dfnav-row"><span>First / Last</span><span><kbd>Home</kbd><kbd>End</kbd></span></div>
+  <div class="dfnav-row"><span>Fullscreen</span><span><kbd>F</kbd></span></div>
+  <div class="dfnav-row"><span>Print / PDF</span><span><kbd>P</kbd></span></div>
+  <div class="dfnav-row"><span>Change deck</span><span><kbd>Esc</kbd></span></div>
+  <div class="dfnav-row"><span>Deep-link</span><span>#slide-N</span></div>
+</div>
+
+<div class="error" id="error"></div>
+
+<script>
+(function(){
+  // --- Element refs -------------------------------------------------
+  const empty    = document.getElementById('empty');
+  const dropZone = document.getElementById('drop-zone');
+  const stage    = document.getElementById('stage');
+  const gallery  = document.getElementById('gallery');
+  const topbar   = document.getElementById('topbar');
+  const topName  = document.getElementById('topbar-name');
+  const topSrc   = document.getElementById('topbar-src');
+  const nav      = document.getElementById('dfnav');
+  const help     = document.getElementById('dfnav-help');
+  const helpPane = document.getElementById('dfnav-help-panel');
+  const elCur    = document.getElementById('dfnav-current');
+  const elTotal  = document.getElementById('dfnav-total');
+  const elPrev   = document.getElementById('dfnav-prev');
+  const elNext   = document.getElementById('dfnav-next');
+  const elCount  = document.getElementById('dfnav-counter');
+  const errBox   = document.getElementById('error');
+  const fileIn   = document.getElementById('file-input');
+  const btnPick  = document.getElementById('btn-pick');
+  const btnURL   = document.getElementById('btn-paste-url');
+  const btnPrint = document.getElementById('btn-print');
+  const btnChange= document.getElementById('btn-change');
+  const btnFS    = document.getElementById('btn-fullscreen');
+
+  // --- State --------------------------------------------------------
+  let slides = [];
+  let current = 0;
+  let hideTimer;
+  const HIDE_DELAY = 2400;
+  const STORAGE_KEY = 'deckViewer.recent';
+  const MAX_RECENT = 6;
+
+  // --- Strip shell-level rules from injected deck stylesheets -----
+  // Decks often ship with `body { background: …; padding: …; }` and
+  // `html { scroll-behavior: …; }` rules that, once injected, repaint the
+  // viewer's own body/html. Walk the stylesheet and delete any rule whose
+  // selector *only* targets body, html, or *.
+  const stripShellRules = (sheet) => {
+    if (!sheet || !sheet.cssRules) return;
+    const isShellOnly = (sel) => {
+      return sel.split(',').every(part => {
+        const p = part.trim().toLowerCase();
+        return p === 'body' || p === 'html' || p === '*';
+      });
+    };
+    // Walk top-level and @media rules in reverse so deletion is safe
+    const walk = (rules, container) => {
+      for (let i = rules.length - 1; i >= 0; i--) {
+        const r = rules[i];
+        if (r.type === CSSRule.STYLE_RULE && r.selectorText && isShellOnly(r.selectorText)) {
+          try { container.deleteRule(i); } catch (_) {}
+        } else if (r.cssRules) {
+          // Nested rule (e.g. @media) — recurse, passing this rule as the container
+          walk(r.cssRules, r);
+        }
+      }
+    };
+    try { walk(sheet.cssRules, sheet); } catch (_) { /* cross-origin stylesheet */ }
+  };
+
+  // --- Error UI -----------------------------------------------------
+  const showError = (msg) => {
+    errBox.textContent = msg;
+    errBox.classList.add('visible');
+    setTimeout(() => errBox.classList.remove('visible'), 5000);
+  };
+
+  // --- Deck loading -------------------------------------------------
+  /**
+   * Given an HTML string, parse it, extract <style>, <link>, and
+   * <section class="slide"> elements, and inject them into the viewer.
+   * @param {string} html
+   * @param {string} source  — display name (filename or URL)
+   * @param {string} baseURL — base for resolving relative asset paths
+   */
+  const loadHTML = (html, source, baseURL) => {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+
+      // Inject <base> for relative asset resolution
+      if (baseURL) {
+        let base = document.createElement('base');
+        base.href = baseURL;
+        // Replace any existing viewer-injected base
+        const prev = document.querySelector('base[data-viewer]');
+        if (prev) prev.remove();
+        base.setAttribute('data-viewer', '');
+        document.head.insertBefore(base, document.head.firstChild);
+      }
+
+      // Inject deck's <link rel="stylesheet"> and <style> into our <head>
+      // but tagged so we can remove them next time.
+      document.querySelectorAll('[data-deck-style]').forEach(n => n.remove());
+
+      const links = doc.querySelectorAll('link[rel="stylesheet"]');
+      links.forEach(l => {
+        const clone = l.cloneNode();
+        clone.setAttribute('data-deck-style', '');
+        document.head.appendChild(clone);
+      });
+
+      const styles = doc.querySelectorAll('style');
+      styles.forEach(s => {
+        const clone = document.createElement('style');
+        clone.textContent = s.textContent;
+        clone.setAttribute('data-deck-style', '');
+        document.head.appendChild(clone);
+        // Strip rules that target the viewer shell itself (body, html, *)
+        // — the deck's own body padding/background would otherwise leak
+        // through and repaint the viewer chrome.
+        stripShellRules(clone.sheet);
+      });
+
+      // Extract slides
+      const slideNodes = [...doc.querySelectorAll('.slide')];
+      if (!slideNodes.length) {
+        showError('No <section class="slide"> elements found in this file.');
+        return false;
+      }
+
+      // Clear and fill the gallery
+      gallery.innerHTML = '';
+      slideNodes.forEach((s, i) => {
+        // Strip original fade-in hiding (viewer re-enables via intersection)
+        s.style.opacity = '';
+        s.style.transform = '';
+        if (!s.id) s.id = `slide-${i+1}`;
+        gallery.appendChild(s);
+      });
+
+      slides = [...gallery.querySelectorAll('.slide')];
+      current = 0;
+
+      // UI switch
+      empty.classList.add('hidden');
+      stage.classList.add('visible');
+      topbar.classList.add('mounted');   // display:flex; opacity still 0
+      help.classList.add('visible');
+
+      // Topbar display
+      const deckTitle = doc.querySelector('title')?.textContent?.trim() || source;
+      topName.textContent = deckTitle;
+      topSrc.textContent = source ? `· ${source}` : '';
+      document.title = `${deckTitle} — Slate`;
+
+      initNav();
+      jumpFromHash({ push: false });
+      setTimeout(showNav, 600);
+
+      return true;
+    } catch (err) {
+      console.error(err);
+      showError('Failed to parse deck: ' + err.message);
+      return false;
+    }
+  };
+
+  const loadFromFile = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const ok = loadHTML(e.target.result, file.name, null);
+      if (ok) addRecent({ name: file.name, source: 'file', size: file.size, ts: Date.now() });
+    };
+    reader.onerror = () => showError('Could not read file.');
+    reader.readAsText(file);
+  };
+
+  const loadFromURL = async (url) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const html = await res.text();
+      // Resolve base URL relative to current document
+      const abs = new URL(url, location.href).href;
+      const basePath = abs.substring(0, abs.lastIndexOf('/') + 1);
+      const ok = loadHTML(html, url, basePath);
+      if (ok) {
+        addRecent({ name: url.split('/').pop() || url, source: url, ts: Date.now() });
+        history.replaceState(null, '', `?deck=${encodeURIComponent(url)}${location.hash}`);
+      }
+    } catch (err) {
+      showError(`Failed to load ${url}: ${err.message}`);
+    }
+  };
+
+  // --- Recent decks (localStorage) ---------------------------------
+  const getRecent = () => {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch { return []; }
+  };
+  const saveRecent = (list) => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+    catch {}
+  };
+  const addRecent = (entry) => {
+    if (entry.source === 'file') return; // can't re-open local files by path
+    let list = getRecent().filter(r => r.source !== entry.source);
+    list.unshift(entry);
+    list = list.slice(0, MAX_RECENT);
+    saveRecent(list);
+  };
+  const renderRecent = () => {
+    const list = getRecent();
+    const container = document.getElementById('recent');
+    const ul = document.getElementById('recent-list');
+    if (!list.length) { container.style.display = 'none'; return; }
+    container.style.display = 'block';
+    ul.innerHTML = '';
+    list.forEach(r => {
+      const btn = document.createElement('button');
+      btn.className = 'recent-item';
+      const age = timeAgo(r.ts);
+      btn.innerHTML = `<span class="name">${escapeHTML(r.name)}</span><span class="meta">${age}</span>`;
+      btn.addEventListener('click', () => loadFromURL(r.source));
+      ul.appendChild(btn);
+    });
+  };
+  const timeAgo = (ts) => {
+    const s = Math.floor((Date.now() - ts) / 1000);
+    if (s < 60) return 'just now';
+    if (s < 3600) return `${Math.floor(s/60)}m ago`;
+    if (s < 86400) return `${Math.floor(s/3600)}h ago`;
+    return `${Math.floor(s/86400)}d ago`;
+  };
+  const escapeHTML = (s) => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // --- Navigation (shared with add-deck-frame) ---------------------
+  // Topbar and nav fade together — one unified chrome.
+  const showNav = () => {
+    nav.classList.add('dfnav-visible');
+    topbar.classList.add('visible');
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => {
+      nav.classList.remove('dfnav-visible');
+      topbar.classList.remove('visible');
+    }, HIDE_DELAY);
+  };
+
+  // --- Fullscreen --------------------------------------------------
+  const toggleFullscreen = () => {
+    const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+    if (fsEl) {
+      (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    } else {
+      const req = document.documentElement.requestFullscreen
+               || document.documentElement.webkitRequestFullscreen;
+      if (req) req.call(document.documentElement);
+    }
+  };
+  const onFSChange = () => {
+    const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+    // When entering fullscreen, snap to the currently-centred slide so it
+    // fills the viewport cleanly.
+    if (fsEl && slides.length) {
+      requestAnimationFrame(() => {
+        slides[current].scrollIntoView({ behavior: 'instant', block: 'center' });
+      });
+    }
+  };
+  document.addEventListener('fullscreenchange', onFSChange);
+  document.addEventListener('webkitfullscreenchange', onFSChange);
+
+  const updateCounter = () => {
+    elCur.textContent = current + 1;
+    elTotal.textContent = slides.length;
+    elPrev.disabled = current === 0;
+    elNext.disabled = current === slides.length - 1;
+  };
+
+  const goTo = (i, { push = true } = {}) => {
+    current = Math.max(0, Math.min(slides.length - 1, i));
+    slides[current].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (push) history.replaceState(null, '', `${location.pathname}${location.search}#slide-${current + 1}`);
+    updateCounter();
+    showNav();
+  };
+
+  const jumpFromHash = ({ push = true } = {}) => {
+    const m = (location.hash || '').match(/^#slide-(\d+)$/);
+    if (m) {
+      const i = Math.max(0, Math.min(slides.length - 1, parseInt(m[1], 10) - 1));
+      goTo(i, { push });
+    } else {
+      updateCounter();
+    }
+  };
+
+  let centerObserver = null;
+  const initNav = () => {
+    if (centerObserver) centerObserver.disconnect();
+    centerObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting && e.intersectionRatio > 0.5) {
+          const idx = slides.indexOf(e.target);
+          if (idx !== -1 && idx !== current) {
+            current = idx;
+            updateCounter();
+            history.replaceState(null, '', `${location.pathname}${location.search}#slide-${current + 1}`);
+          }
+        }
+      });
+    }, { threshold: [0.5, 0.75] });
+    slides.forEach(s => centerObserver.observe(s));
+
+    // Reveal-on-scroll for decks that use opacity:0 + .visible
+    const reveal = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.12 });
+    slides.forEach(s => reveal.observe(s));
+
+    updateCounter();
+  };
+
+  // --- Wire up events ----------------------------------------------
+  document.addEventListener('mousemove', () => { if (slides.length) showNav(); }, { passive: true });
+  document.addEventListener('touchstart', () => { if (slides.length) showNav(); }, { passive: true });
+  nav.addEventListener('mouseenter', () => { clearTimeout(hideTimer); nav.classList.add('dfnav-visible'); });
+  nav.addEventListener('mouseleave', showNav);
+
+  help.addEventListener('click', (e) => {
+    e.stopPropagation();
+    helpPane.classList.toggle('dfnav-open');
+  });
+  document.addEventListener('click', (e) => {
+    if (!helpPane.contains(e.target) && e.target !== help) helpPane.classList.remove('dfnav-open');
+  });
+
+  // Peek shortcuts on counter hover/focus.
+  // Small grace period so brief mouse flicks between counter and panel
+  // don't flicker the UI.
+  let peekTimer;
+  const peekOpen = () => {
+    clearTimeout(peekTimer);
+    helpPane.classList.add('dfnav-open');
+  };
+  const peekClose = () => {
+    clearTimeout(peekTimer);
+    peekTimer = setTimeout(() => {
+      if (!elCount.matches(':hover') && !helpPane.matches(':hover') && document.activeElement !== elCount) {
+        helpPane.classList.remove('dfnav-open');
+      }
+    }, 180);
+  };
+  elCount.addEventListener('mouseenter', peekOpen);
+  elCount.addEventListener('focus', peekOpen);
+  elCount.addEventListener('mouseleave', peekClose);
+  elCount.addEventListener('blur', peekClose);
+  helpPane.addEventListener('mouseenter', () => clearTimeout(peekTimer));
+  helpPane.addEventListener('mouseleave', peekClose);
+
+  elPrev.addEventListener('click', () => goTo(current - 1));
+  elNext.addEventListener('click', () => goTo(current + 1));
+
+  document.addEventListener('keydown', (e) => {
+    const tag = document.activeElement && document.activeElement.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if (!slides.length) return;
+    if (['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)) {
+      e.preventDefault(); goTo(current + 1);
+    } else if (['ArrowLeft','ArrowUp','PageUp'].includes(e.key)) {
+      e.preventDefault(); goTo(current - 1);
+    } else if (e.key === 'Home') {
+      e.preventDefault(); goTo(0);
+    } else if (e.key === 'End') {
+      e.preventDefault(); goTo(slides.length - 1);
+    } else if (e.key === 'p' || e.key === 'P') {
+      if (!e.metaKey && !e.ctrlKey) { e.preventDefault(); window.print(); }
+    } else if (e.key === 'f' || e.key === 'F') {
+      if (!e.metaKey && !e.ctrlKey) { e.preventDefault(); toggleFullscreen(); }
+    } else if (e.key === '?' || e.key === '/') {
+      e.preventDefault(); helpPane.classList.toggle('dfnav-open'); showNav();
+    } else if (e.key === 'Escape') {
+      if (helpPane.classList.contains('dfnav-open')) {
+        helpPane.classList.remove('dfnav-open');
+      } else {
+        resetToEmpty();
+      }
+    }
+  });
+
+  window.addEventListener('hashchange', () => jumpFromHash({ push: false }));
+
+  // --- Topbar buttons ----------------------------------------------
+  btnPrint.addEventListener('click', () => window.print());
+  btnChange.addEventListener('click', resetToEmpty);
+  btnFS.addEventListener('click', toggleFullscreen);
+  // Keep topbar visible while hovering it (mirror nav behaviour)
+  topbar.addEventListener('mouseenter', () => {
+    clearTimeout(hideTimer);
+    topbar.classList.add('visible');
+    nav.classList.add('dfnav-visible');
+  });
+  topbar.addEventListener('mouseleave', showNav);
+
+  function resetToEmpty() {
+    stage.classList.remove('visible');
+    topbar.classList.remove('visible', 'mounted');
+    help.classList.remove('visible');
+    nav.classList.remove('dfnav-visible');
+    gallery.innerHTML = '';
+    slides = [];
+    empty.classList.remove('hidden');
+    document.querySelectorAll('[data-deck-style],[data-viewer]').forEach(n => n.remove());
+    history.replaceState(null, '', location.pathname);
+    document.title = 'Slate';
+    renderRecent();
+    const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+    if (fsEl) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  }
+
+  // --- File picker + drag-drop -------------------------------------
+  btnPick.addEventListener('click', () => fileIn.click());
+  fileIn.addEventListener('change', () => {
+    if (fileIn.files[0]) loadFromFile(fileIn.files[0]);
+  });
+
+  btnURL.addEventListener('click', () => {
+    const url = prompt('Path or URL to deck HTML:', './index-indigo.html');
+    if (url) loadFromURL(url);
+  });
+
+  // Drag & drop anywhere on empty state — tint the whole empty area
+  ['dragenter','dragover'].forEach(ev => {
+    empty.addEventListener(ev, (e) => {
+      e.preventDefault(); e.stopPropagation();
+      empty.classList.add('drag-over');
+    });
+  });
+  ['dragleave','drop'].forEach(ev => {
+    empty.addEventListener(ev, (e) => {
+      e.preventDefault(); e.stopPropagation();
+      empty.classList.remove('drag-over');
+    });
+  });
+  empty.addEventListener('drop', (e) => {
+    const file = e.dataTransfer.files[0];
+    if (file) loadFromFile(file);
+  });
+  // Also accept drops anywhere on the page when empty state is visible
+  document.addEventListener('dragover', (e) => {
+    if (!empty.classList.contains('hidden')) e.preventDefault();
+  });
+  document.addEventListener('drop', (e) => {
+    if (!empty.classList.contains('hidden')) {
+      e.preventDefault();
+      const file = e.dataTransfer.files[0];
+      if (file) loadFromFile(file);
+    }
+  });
+
+  // --- URL param auto-load -----------------------------------------
+  const params = new URLSearchParams(location.search);
+  const deckParam = params.get('deck');
+  if (deckParam) {
+    loadFromURL(deckParam);
+  } else {
+    renderRecent();
+  }
+})();
+</script>
+</body>
+</html>

@@ -441,6 +441,7 @@
     <span class="src" id="topbar-src"></span>
   </div>
   <div class="topbar-actions">
+    <button class="topbar-btn" id="btn-edit" title="Edit in Slate Editor">Edit</button>
     <button class="topbar-btn icon-btn" id="btn-fullscreen" aria-label="Fullscreen (F)" title="Fullscreen (F)">⛶</button>
     <button class="topbar-btn" id="btn-print">Print</button>
     <button class="topbar-btn" id="btn-change">Change</button>
@@ -494,6 +495,7 @@
   const btnPrint = document.getElementById('btn-print');
   const btnChange= document.getElementById('btn-change');
   const btnFS    = document.getElementById('btn-fullscreen');
+  const btnEdit  = document.getElementById('btn-edit');
 
   // --- State --------------------------------------------------------
   let slides = [];
@@ -858,6 +860,17 @@
   btnPrint.addEventListener('click', () => window.print());
   btnChange.addEventListener('click', resetToEmpty);
   btnFS.addEventListener('click', toggleFullscreen);
+  btnEdit.addEventListener('click', () => {
+    // Hand off the current slate's original HTML to the editor via sessionStorage
+    const deckParam = new URLSearchParams(location.search).get('deck');
+    if (deckParam) {
+      window.open('editor.html?slate=' + encodeURIComponent(deckParam), '_blank');
+    } else {
+      // For file-dropped slates, re-assemble from the current DOM is lossy.
+      // Open editor empty and let them re-drop.
+      window.open('editor.html', '_blank');
+    }
+  });
   // Keep topbar visible while hovering it (mirror nav behaviour)
   topbar.addEventListener('mouseenter', () => {
     clearTimeout(hideTimer);
@@ -925,7 +938,20 @@
   // --- URL param auto-load -----------------------------------------
   const params = new URLSearchParams(location.search);
   const deckParam = params.get('deck');
-  if (deckParam) {
+  const fromEditor = params.get('from') === 'editor';
+
+  if (fromEditor) {
+    // Receive a slate from the editor via sessionStorage
+    try {
+      const html = sessionStorage.getItem('slate-editor-handoff');
+      sessionStorage.removeItem('slate-editor-handoff');
+      if (html) {
+        loadHTML(html, 'from editor', null);
+      } else {
+        renderRecent();
+      }
+    } catch { renderRecent(); }
+  } else if (deckParam) {
     loadFromURL(deckParam);
   } else {
     renderRecent();

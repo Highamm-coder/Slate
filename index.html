@@ -571,6 +571,7 @@
   </div>
   <div class="topbar-actions">
     <button class="topbar-btn" id="btn-edit" title="Edit in Slate Editor">Edit</button>
+    <button class="topbar-btn" id="btn-save" title="Download slate as HTML (S)">Save ↓</button>
     <button class="topbar-btn icon-btn" id="btn-fullscreen" aria-label="Fullscreen (F)" title="Fullscreen (F)">⛶</button>
     <button class="topbar-btn" id="btn-print">Print</button>
     <button class="topbar-btn" id="btn-change">Change</button>
@@ -591,6 +592,7 @@
 <div class="dfnav-help-panel" id="dfnav-help-panel" role="dialog">
   <div class="dfnav-row"><span>Next / Prev</span><span><kbd>←</kbd><kbd>→</kbd></span></div>
   <div class="dfnav-row"><span>First / Last</span><span><kbd>Home</kbd><kbd>End</kbd></span></div>
+  <div class="dfnav-row"><span>Save / Download</span><span><kbd>S</kbd></span></div>
   <div class="dfnav-row"><span>Fullscreen</span><span><kbd>F</kbd></span></div>
   <div class="dfnav-row"><span>Print / PDF</span><span><kbd>P</kbd></span></div>
   <div class="dfnav-row"><span>Change slate</span><span><kbd>Esc</kbd></span></div>
@@ -643,6 +645,7 @@
   const btnChange= document.getElementById('btn-change');
   const btnFS    = document.getElementById('btn-fullscreen');
   const btnEdit  = document.getElementById('btn-edit');
+  const btnSave  = document.getElementById('btn-save');
 
   // --- State --------------------------------------------------------
   let slides = [];
@@ -733,6 +736,16 @@
         // through and repaint the viewer chrome.
         stripShellRules(clone.sheet);
       });
+
+      // Store CSS + links for Save/Download reconstruction
+      lastLoadedCSS = '';
+      lastLoadedLinks = [];
+      doc.querySelectorAll('style').forEach(s => { lastLoadedCSS += s.textContent + '\n'; });
+      doc.querySelectorAll('link[rel="stylesheet"]').forEach(l => {
+        if (l.getAttribute('href')) lastLoadedLinks.push(l.getAttribute('href'));
+      });
+      currentFilename = (source || 'slate').replace(/[^a-zA-Z0-9._-]/g, '_');
+      if (!currentFilename.endsWith('.html')) currentFilename += '.html';
 
       // Extract slides
       const slideNodes = [...doc.querySelectorAll('.slide')];
@@ -1023,6 +1036,8 @@
       e.preventDefault(); goTo(slides.length - 1);
     } else if (e.key === 'p' || e.key === 'P') {
       if (!e.metaKey && !e.ctrlKey) { e.preventDefault(); window.print(); }
+    } else if (e.key === 's' || e.key === 'S') {
+      if (!e.metaKey && !e.ctrlKey) { e.preventDefault(); downloadSlate(); }
     } else if (e.key === 'f' || e.key === 'F') {
       if (!e.metaKey && !e.ctrlKey) { e.preventDefault(); toggleFullscreen(); }
     } else if (e.key === '?' || e.key === '/') {
@@ -1210,6 +1225,49 @@
     const title = document.getElementById('topbar-name')?.textContent || 'Slate';
     return `<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8" />\n<meta name="viewport" content="width=device-width, initial-scale=1" />\n<title>${title}</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">\n${linkTags}<style>\n${css}\n</style>\n</head>\n<body>\n${html}\n</body>\n</html>`;
   };
+
+  // --- Save (download) from viewer mode ----------------------------
+  // Reconstruct a full HTML file from the viewer's current gallery
+  // content + the CSS/links captured when the slate was loaded.
+  const getViewerFullHTML = () => {
+    const bodyHTML = gallery.innerHTML;
+    const title = document.getElementById('topbar-name')?.textContent || 'Slate';
+    let linkTags = '';
+    lastLoadedLinks.forEach(href => {
+      linkTags += `<link rel="stylesheet" href="${href}">\n`;
+    });
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>${title}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+${linkTags}<style>
+${lastLoadedCSS}
+</style>
+</head>
+<body>
+${bodyHTML}
+</body>
+</html>`;
+  };
+
+  const downloadSlate = () => {
+    if (!slides.length && !gjsEditor) return;
+    const html = gjsEditor ? getFullHTML() : getViewerFullHTML();
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = currentFilename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  btnSave.addEventListener('click', downloadSlate);
 
   btnEdit.addEventListener('click', enterEditMode);
   edDone.addEventListener('click', exitEditMode);

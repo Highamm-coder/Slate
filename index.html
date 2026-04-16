@@ -400,7 +400,69 @@
     }
     img{max-width:none !important;}
   }
+  /* --- EDITOR MODE (GrapesJS, lazy-loaded) ------------------------- */
+  .editor-mode{
+    display:none;
+    position:fixed;inset:0;z-index:200;
+    flex-direction:column;
+    background:var(--vbg);
+  }
+  .editor-mode.active{display:flex;}
+  .ed-topbar{
+    height:48px;flex:0 0 48px;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 16px;
+    background:#141626;
+    border-bottom:1px solid #2A2C40;
+    z-index:10;
+  }
+  .ed-topbar-left{display:flex;align-items:center;gap:12px;}
+  .ed-topbar-left .dot{width:5px;height:5px;border-radius:50%;background:var(--vaccent);}
+  .ed-topbar-left .brand{font-size:12px;font-weight:600;letter-spacing:.06em;color:#E8E7E3;}
+  .ed-topbar-left .sep{color:#8A8BA0;font-size:11px;}
+  .ed-topbar-left .label{font-size:12px;color:#8A8BA0;letter-spacing:.02em;}
+  .ed-topbar-right{display:flex;align-items:center;gap:6px;}
+  .ed-btn{
+    padding:6px 14px;border:none;border-radius:3px;
+    font-family:'Inter',sans-serif;font-size:11px;font-weight:500;
+    letter-spacing:.03em;cursor:pointer;color:#E8E7E3;
+    transition:background .15s ease,transform .1s ease;
+  }
+  .ed-btn:active{transform:scale(.97);}
+  .ed-btn.primary{background:var(--vaccent);}
+  .ed-btn.primary:hover{background:#5254D4;}
+  .ed-btn.ghost{background:rgba(255,255,255,0.06);border:1px solid #2A2C40;}
+  .ed-btn.ghost:hover{background:rgba(255,255,255,0.10);}
+  #gjs-container{flex:1;overflow:hidden;}
+
+  /* --- GrapesJS dark theme overrides -------------------------------- */
+  .gjs-one-bg{background:#141626 !important;}
+  .gjs-two-color{color:#E8E7E3 !important;}
+  .gjs-three-bg{background:#1A1C2E !important;}
+  .gjs-four-color,.gjs-four-color-h:hover{color:var(--vaccent) !important;}
+  .gjs-pn-panel{background:#141626 !important;border-color:#2A2C40 !important;}
+  .gjs-pn-views,.gjs-pn-views-container{background:#141626 !important;}
+  .gjs-block{
+    background:rgba(255,255,255,0.04) !important;
+    border:1px solid #2A2C40 !important;
+    border-radius:4px !important;color:#E8E7E3 !important;
+    font-family:'Inter',sans-serif !important;font-size:11px !important;
+    min-height:auto !important;padding:10px 8px !important;
+  }
+  .gjs-block:hover{background:rgba(255,255,255,0.08) !important;border-color:var(--vaccent) !important;}
+  .gjs-block__media{display:none !important;}
+  .gjs-block-label{font-size:11px !important;font-weight:500 !important;}
+  .gjs-cv-canvas{background:#1A1C2E !important;}
+  .gjs-pn-btn{color:#8A8BA0 !important;}
+  .gjs-pn-btn.gjs-pn-active,.gjs-pn-btn:hover{color:var(--vaccent) !important;}
+  .gjs-sm-sector-title,.gjs-sm-label,.gjs-trt-trait .gjs-label{
+    font-family:'Inter',sans-serif !important;font-size:11px !important;color:#8A8BA0 !important;
+  }
+  .gjs-field{background:rgba(255,255,255,0.04) !important;border-color:#2A2C40 !important;color:#E8E7E3 !important;font-family:'Inter',sans-serif !important;}
+  .gjs-input-holder input,.gjs-field input,.gjs-field textarea,.gjs-field select{color:#E8E7E3 !important;font-family:'Inter',sans-serif !important;}
 </style>
+<!-- GrapesJS CSS (small, loaded eagerly so it's ready when Edit is clicked) -->
+<link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.13/dist/css/grapes.min.css">
 </head>
 <body class="v-shell">
 
@@ -469,6 +531,24 @@
 </div>
 
 <div class="error" id="error"></div>
+
+<!-- Editor mode (GrapesJS, lazy-loaded on first Edit click) -->
+<div class="editor-mode" id="editor-mode">
+  <div class="ed-topbar">
+    <div class="ed-topbar-left">
+      <span class="dot"></span>
+      <span class="brand">SLATE</span>
+      <span class="sep">/</span>
+      <span class="label">Editing</span>
+    </div>
+    <div class="ed-topbar-right">
+      <button class="ed-btn ghost" id="ed-copy">Copy HTML</button>
+      <button class="ed-btn ghost" id="ed-download">Download</button>
+      <button class="ed-btn primary" id="ed-done">Done editing</button>
+    </div>
+  </div>
+  <div id="gjs-container"></div>
+</div>
 
 <script>
 (function(){
@@ -860,16 +940,196 @@
   btnPrint.addEventListener('click', () => window.print());
   btnChange.addEventListener('click', resetToEmpty);
   btnFS.addEventListener('click', toggleFullscreen);
-  btnEdit.addEventListener('click', () => {
-    // Hand off the current slate's original HTML to the editor via sessionStorage
-    const deckParam = new URLSearchParams(location.search).get('deck');
-    if (deckParam) {
-      window.open('editor.html?slate=' + encodeURIComponent(deckParam), '_blank');
-    } else {
-      // For file-dropped slates, re-assemble from the current DOM is lossy.
-      // Open editor empty and let them re-drop.
-      window.open('editor.html', '_blank');
+  // ================================================================
+  // EDITOR MODE — GrapesJS, lazy-loaded, same page
+  // ================================================================
+  const editorMode  = document.getElementById('editor-mode');
+  const edDone      = document.getElementById('ed-done');
+  const edCopy      = document.getElementById('ed-copy');
+  const edDownload  = document.getElementById('ed-download');
+  let gjsEditor     = null;
+  let gjsLoaded     = false;
+  let lastLoadedCSS = '';
+  let lastLoadedLinks = [];
+  let currentFilename = 'slate.html';
+
+  // Lazy-load the GrapesJS script on first use
+  const ensureGJS = () => new Promise((resolve, reject) => {
+    if (gjsLoaded) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/grapesjs@0.21.13/dist/grapes.min.js';
+    s.onload = () => { gjsLoaded = true; resolve(); };
+    s.onerror = () => reject(new Error('Failed to load GrapesJS'));
+    document.head.appendChild(s);
+  });
+
+  // Extract the current viewer's slate as raw HTML + CSS
+  const captureCurrentSlate = () => {
+    // Grab injected deck styles
+    let css = '';
+    document.querySelectorAll('[data-deck-style]').forEach(el => {
+      if (el.tagName === 'STYLE') css += el.textContent + '\n';
+    });
+    const links = [];
+    document.querySelectorAll('[data-deck-style]').forEach(el => {
+      if (el.tagName === 'LINK' && el.href) links.push(el.getAttribute('href'));
+    });
+    const bodyHTML = gallery.innerHTML;
+    return { css, links, bodyHTML };
+  };
+
+  // Slide block definitions for the editor sidebar
+  const SLATE_BLOCKS = {
+    'Title Slide': `<section class="slide title has-bg dark"><div class="bg"></div><div class="inner"><div class="eyebrow">PRESENTATION · 2026</div><div class="title-block" style="margin-top:auto;"><h1 class="h1">Your headline here.</h1><p class="sub">A one-sentence subtitle.</p></div><div class="chrome"><div class="mark"><span class="dot"></span><span>STUDIO</span></div><span>00 / 00</span></div></div></section>`,
+    'Agenda': `<section class="slide"><div class="inner"><div class="meta-row"><span class="eyebrow">Agenda</span><span class="sec">Section 01</span></div><h2 class="h2">What we'll cover.</h2><div class="agenda-grid"><div class="agenda-item"><div class="num">01</div><div><div class="ttl">Section title</div><div class="sub">Description.</div></div></div><div class="agenda-item"><div class="num">02</div><div><div class="ttl">Section title</div><div class="sub">Description.</div></div></div></div><div class="chrome"><div class="mark"><span class="dot"></span><span>STUDIO</span></div><span>00 / 00</span></div></div></section>`,
+    'Statement': `<section class="slide has-bg dark"><div class="bg"></div><div class="inner"><div class="meta-row"><span class="eyebrow">The premise</span><span class="sec">Section 02</span></div><p class="statement">A single confident sentence.</p><div class="chrome"><div class="mark"><span class="dot"></span><span>STUDIO</span></div><span>00 / 00</span></div></div></section>`,
+    'Two Column': `<section class="slide"><div class="inner"><div class="meta-row"><span class="eyebrow">Context</span><span class="sec">Section 02</span></div><h2 class="h2">Two forces at play.</h2><div class="cols"><div class="col"><h3>First column</h3><p>Body text.</p></div><div class="col"><h3>Second column</h3><p>Body text.</p></div></div><div class="chrome"><div class="mark"><span class="dot"></span><span>STUDIO</span></div><span>00 / 00</span></div></div></section>`,
+    'Stats': `<section class="slide"><div class="inner"><div class="meta-row"><span class="eyebrow">By the numbers</span><span class="sec">Section 03</span></div><h2 class="h2">Three figures.</h2><div class="stats"><div class="stat"><div class="num mono">3.2×</div><div class="lbl">Label</div><div class="desc">Description.</div></div><div class="stat"><div class="num mono">41%</div><div class="lbl">Label</div><div class="desc">Description.</div></div><div class="stat"><div class="num mono">$1.8M</div><div class="lbl">Label</div><div class="desc">Description.</div></div></div><div class="chrome"><div class="mark"><span class="dot"></span><span>STUDIO</span></div><span>00 / 00</span></div></div></section>`,
+    'Principles': `<section class="slide dark"><div class="inner"><div class="meta-row"><span class="eyebrow">Approach</span><span class="sec">Section 03</span></div><h2 class="h2" style="color:#F2F1EC;">Three principles.</h2><div class="plist"><div class="prow"><div class="idx">P · 01</div><div class="h">First principle</div><div class="d">Elaboration.</div></div><div class="prow"><div class="idx">P · 02</div><div class="h">Second principle</div><div class="d">Elaboration.</div></div><div class="prow"><div class="idx">P · 03</div><div class="h">Third principle</div><div class="d">Elaboration.</div></div></div><div class="chrome"><div class="mark"><span class="dot"></span><span>STUDIO</span></div><span>00 / 00</span></div></div></section>`,
+    'Quote': `<section class="slide"><div class="inner"><div class="meta-row"><span class="eyebrow">In their words</span><span class="sec">Section 04</span></div><div class="quote"><span class="mark-q">"</span><p class="q">A memorable quote.</p><p class="attr">Name · Role · Organisation</p></div><div class="chrome"><div class="mark"><span class="dot"></span><span>STUDIO</span></div><span>00 / 00</span></div></div></section>`,
+    'Close': `<section class="slide has-bg dark"><div class="bg"></div><div class="inner"><div class="meta-row"><span class="eyebrow">Next</span><span class="sec">Close</span></div><h2 class="h2" style="color:#FFFFFF;">Let's go.</h2><p class="body" style="max-width:60%;margin-top:1.4cqw;color:rgba(242,241,236,0.78);">A call to action.</p><div class="close-layout"><a href="#" class="cta">CTA label →</a><div class="contact"><strong>Name</strong><span>email@domain.com</span></div></div><div class="chrome"><div class="mark"><span class="dot"></span><span>STUDIO</span></div><span>00 / 00</span></div></div></section>`,
+  };
+
+  const enterEditMode = async () => {
+    if (!slides.length) return;
+    try {
+      await ensureGJS();
+    } catch (err) {
+      showError('Could not load the editor: ' + err.message);
+      return;
     }
+
+    const captured = captureCurrentSlate();
+    lastLoadedCSS = captured.css;
+    lastLoadedLinks = captured.links;
+
+    // Hide viewer chrome, show editor
+    stage.style.display = 'none';
+    topbar.classList.remove('visible', 'mounted');
+    nav.classList.remove('dfnav-visible');
+    help.classList.remove('visible');
+    editorMode.classList.add('active');
+
+    // Destroy previous editor if exists
+    if (gjsEditor) {
+      gjsEditor.destroy();
+      document.getElementById('gjs-container').innerHTML = '';
+    }
+
+    gjsEditor = grapesjs.init({
+      container: '#gjs-container',
+      fromElement: false,
+      height: '100%',
+      width: 'auto',
+      storageManager: false,
+      canvas: {
+        styles: [
+          'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
+          ...lastLoadedLinks,
+        ],
+      },
+      panels: { defaults: [] },
+      styleManager: { sectors: [] },
+      deviceManager: { devices: [{ name: 'Desktop', width: '' }] },
+    });
+
+    // Inject the slate CSS into the canvas head
+    const injectCSS = () => {
+      const canvasDoc = gjsEditor.Canvas.getDocument();
+      if (canvasDoc && canvasDoc.head) {
+        const s = canvasDoc.createElement('style');
+        s.textContent = lastLoadedCSS;
+        canvasDoc.head.appendChild(s);
+      }
+    };
+    gjsEditor.on('canvas:frame:load', injectCSS);
+    // Also try immediately in case frame is already loaded
+    setTimeout(injectCSS, 100);
+
+    gjsEditor.setComponents(captured.bodyHTML);
+    gjsEditor.setStyle(lastLoadedCSS);
+
+    // Add Slate slide blocks
+    const bm = gjsEditor.BlockManager;
+    Object.entries(SLATE_BLOCKS).forEach(([label, content]) => {
+      bm.add(`slate-${label.toLowerCase().replace(/\s/g, '-')}`, {
+        label, category: 'Slides', content, activate: true,
+      });
+    });
+
+    // Open blocks panel
+    gjsEditor.Panels.addPanel({
+      id: 'views',
+      buttons: [{ id: 'open-blocks', active: true, label: 'Slides', command: 'open-blocks', togglable: false }],
+    });
+
+    // Double-click text editing
+    gjsEditor.on('component:selected', (model) => {
+      if (model.get('type') !== 'wrapper' && model.get('type') !== 'image') {
+        model.set('editable', true);
+      }
+    });
+  };
+
+  const exitEditMode = () => {
+    if (!gjsEditor) return;
+
+    // Extract edited HTML
+    const editedHTML = gjsEditor.getHtml();
+
+    // Re-inject into the viewer's gallery
+    gallery.innerHTML = editedHTML;
+    slides = [...gallery.querySelectorAll('.slide')];
+    current = 0;
+
+    // Destroy editor
+    gjsEditor.destroy();
+    gjsEditor = null;
+    document.getElementById('gjs-container').innerHTML = '';
+    editorMode.classList.remove('active');
+
+    // Restore viewer
+    stage.style.display = '';
+    topbar.classList.add('mounted');
+    help.classList.add('visible');
+    initNav();
+    jumpFromHash({ push: false });
+    setTimeout(showNav, 300);
+  };
+
+  const getFullHTML = () => {
+    if (!gjsEditor) return '';
+    const html = gjsEditor.getHtml();
+    const css = gjsEditor.getCss({ avoidProtected: true });
+    let linkTags = '';
+    lastLoadedLinks.forEach(href => {
+      linkTags += `<link rel="stylesheet" href="${href}">\n`;
+    });
+    const title = document.getElementById('topbar-name')?.textContent || 'Slate';
+    return `<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8" />\n<meta name="viewport" content="width=device-width, initial-scale=1" />\n<title>${title}</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">\n${linkTags}<style>\n${css}\n</style>\n</head>\n<body>\n${html}\n</body>\n</html>`;
+  };
+
+  btnEdit.addEventListener('click', enterEditMode);
+  edDone.addEventListener('click', exitEditMode);
+
+  edCopy.addEventListener('click', async () => {
+    if (!gjsEditor) return;
+    try {
+      await navigator.clipboard.writeText(getFullHTML());
+      showError(''); // clear any old errors
+    } catch { /* silent */ }
+  });
+
+  edDownload.addEventListener('click', () => {
+    if (!gjsEditor) return;
+    const html = getFullHTML();
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = currentFilename;
+    a.click();
+    URL.revokeObjectURL(url);
   });
   // Keep topbar visible while hovering it (mirror nav behaviour)
   topbar.addEventListener('mouseenter', () => {
@@ -938,20 +1198,7 @@
   // --- URL param auto-load -----------------------------------------
   const params = new URLSearchParams(location.search);
   const deckParam = params.get('deck');
-  const fromEditor = params.get('from') === 'editor';
-
-  if (fromEditor) {
-    // Receive a slate from the editor via sessionStorage
-    try {
-      const html = sessionStorage.getItem('slate-editor-handoff');
-      sessionStorage.removeItem('slate-editor-handoff');
-      if (html) {
-        loadHTML(html, 'from editor', null);
-      } else {
-        renderRecent();
-      }
-    } catch { renderRecent(); }
-  } else if (deckParam) {
+  if (deckParam) {
     loadFromURL(deckParam);
   } else {
     renderRecent();

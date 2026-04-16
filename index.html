@@ -153,6 +153,54 @@
     color:var(--vink-muted);
     border-radius:3px;letter-spacing:.02em;
   }
+
+  /* --- Source cards (visual load-path grid) ------------------------- */
+  .sources-label{
+    font-size:10px;font-weight:500;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--vink-faint);
+    margin-top:36px;margin-bottom:14px;
+    padding-top:20px;
+    border-top:1px solid var(--vrule);
+  }
+  .sources{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+  }
+  .source{
+    display:flex;flex-direction:column;align-items:center;
+    gap:8px;
+    padding:20px 12px 16px;
+    border:1px solid var(--vrule);
+    border-radius:4px;
+    cursor:pointer;
+    transition:border-color .15s ease,background .15s ease;
+    text-align:center;
+    background:transparent;
+    font-family:'Inter',sans-serif;
+    width:100%;
+  }
+  a.source{text-decoration:none;color:inherit;}
+  .source:hover{
+    border-color:var(--vaccent);
+    background:rgba(61,63,183,0.04);
+  }
+  .source .icon{
+    font-size:22px;line-height:1;
+    opacity:.8;
+  }
+  .source .label{
+    font-size:12px;font-weight:500;letter-spacing:-.01em;
+    color:var(--vink);
+  }
+  .source .desc{
+    font-size:10px;line-height:1.4;
+    color:var(--vink-faint);
+    max-width:140px;
+  }
+  @media (max-width:560px){
+    .sources{grid-template-columns:1fr 1fr;}
+  }
   .recent{
     margin-top:56px;padding-top:24px;
     border-top:1px solid var(--vrule);
@@ -469,14 +517,33 @@
 <!-- Empty state: drop zone + file picker + recent -->
 <div class="empty" id="empty">
   <div class="empty-card" id="drop-zone">
-    <div class="empty-eyebrow">Viewer</div>
+    <div class="empty-eyebrow">Slate</div>
     <h1 class="empty-title">Load a slate.</h1>
-    <p class="empty-sub">Drop an HTML file here, pick one from disk, or append <code>?deck=path.html</code> to the URL.</p>
+    <p class="empty-sub">Drop an HTML file anywhere on this page, or pick a source below.</p>
+
     <div class="empty-actions">
       <button class="empty-btn" id="btn-pick">Pick HTML file</button>
-      <button class="empty-btn ghost" id="btn-paste-url">Load from URL</button>
+      <button class="empty-btn ghost" id="btn-paste-url">Paste a URL</button>
     </div>
-    <p class="empty-hint">Any slate with <code>&lt;section class="slide"&gt;</code> elements will work.</p>
+
+    <div class="sources-label">Works with</div>
+    <div class="sources">
+      <button class="source" id="src-file">
+        <span class="icon">📄</span>
+        <span class="label">Local file</span>
+        <span class="desc">Drag & drop or pick from disk</span>
+      </button>
+      <button class="source" id="src-drive">
+        <span class="icon">▲</span>
+        <span class="label">Google Drive</span>
+        <span class="desc">Paste a Drive share link</span>
+      </button>
+      <button class="source" id="src-url">
+        <span class="icon">🔗</span>
+        <span class="label">Any URL</span>
+        <span class="desc">GitHub, Dropbox, S3, etc.</span>
+      </button>
+    </div>
 
     <div class="empty-divider">Or</div>
     <div class="empty-start">
@@ -1190,16 +1257,26 @@
     if (fsEl) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
   }
 
-  // --- File picker + drag-drop -------------------------------------
-  btnPick.addEventListener('click', () => fileIn.click());
+  // --- File picker + drag-drop + source cards ----------------------
+  const openFilePicker = () => fileIn.click();
+  const openURLPrompt = (placeholder) => {
+    const url = prompt('Paste a URL to a slate:', placeholder || '');
+    if (url) loadFromURL(url);
+  };
+
+  btnPick.addEventListener('click', openFilePicker);
   fileIn.addEventListener('change', () => {
     if (fileIn.files[0]) loadFromFile(fileIn.files[0]);
   });
+  btnURL.addEventListener('click', () => openURLPrompt(''));
 
-  btnURL.addEventListener('click', () => {
-    const url = prompt('Paste a URL to a slate — local path, Google Drive link, or any public URL:', '');
-    if (url) loadFromURL(url);
-  });
+  // Source card click handlers
+  document.getElementById('src-file')?.addEventListener('click', openFilePicker);
+  document.getElementById('src-drive')?.addEventListener('click', () =>
+    openURLPrompt('https://drive.google.com/file/d/.../view'));
+  document.getElementById('src-url')?.addEventListener('click', () =>
+    openURLPrompt('https://'));
+
 
   // Drag & drop anywhere on empty state — tint the whole empty area
   ['dragenter','dragover'].forEach(ev => {

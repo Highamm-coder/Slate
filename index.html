@@ -721,21 +721,56 @@
     reader.readAsText(file);
   };
 
+  // Detect whether a URL is external (needs the CORS proxy) or local (can fetch directly).
+  // Google Drive, Dropbox, GitHub raw, and any non-same-origin URL goes through the proxy.
+  const isExternal = (url) => {
+    try {
+      const u = new URL(url, location.href);
+      return u.origin !== location.origin;
+    } catch { return true; }
+  };
+
+  const isDriveURL = (url) => /drive\.google\.com|docs\.google\.com\/document/.test(url);
+
+  // Friendly display name from a URL
+  const displayName = (url) => {
+    if (isDriveURL(url)) {
+      const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      return m ? `Drive: ${m[1].slice(0,8)}…` : 'Google Drive';
+    }
+    return url.split('/').pop()?.split('?')[0] || url;
+  };
+
   const loadFromURL = async (url) => {
     try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      let fetchUrl = url;
+      let basePath = null;
+
+      if (isExternal(url)) {
+        // Route through the CORS proxy — it also handles Drive URL transformation
+        fetchUrl = `/api/fetch-slate?url=${encodeURIComponent(url)}`;
+        basePath = null; // external assets stay external
+      } else {
+        // Local file — resolve base for relative assets
+        const abs = new URL(url, location.href).href;
+        basePath = abs.substring(0, abs.lastIndexOf('/') + 1);
+      }
+
+      const res = await fetch(fetchUrl);
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        let msg = `HTTP ${res.status}`;
+        try { const j = JSON.parse(body); if (j.error) msg = j.error; } catch {}
+        throw new Error(msg);
+      }
       const html = await res.text();
-      // Resolve base URL relative to current document
-      const abs = new URL(url, location.href).href;
-      const basePath = abs.substring(0, abs.lastIndexOf('/') + 1);
-      const ok = loadHTML(html, url, basePath);
+      const ok = loadHTML(html, displayName(url), basePath);
       if (ok) {
-        addRecent({ name: url.split('/').pop() || url, source: url, ts: Date.now() });
+        addRecent({ name: displayName(url), source: url, ts: Date.now() });
         history.replaceState(null, '', `?deck=${encodeURIComponent(url)}${location.hash}`);
       }
     } catch (err) {
-      showError(`Failed to load ${url}: ${err.message}`);
+      showError(`Failed to load: ${err.message}`);
     }
   };
 
@@ -1162,7 +1197,7 @@
   });
 
   btnURL.addEventListener('click', () => {
-    const url = prompt('Path or URL to deck HTML:', './index-indigo.html');
+    const url = prompt('Paste a URL to a slate — local path, Google Drive link, or any public URL:', '');
     if (url) loadFromURL(url);
   });
 

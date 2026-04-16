@@ -654,6 +654,44 @@
   const HIDE_DELAY = 2400;
   const STORAGE_KEY = 'deckViewer.recent';
   const MAX_RECENT = 6;
+  const SESSION_KEY = 'slate.session';  // auto-save current slate
+
+  // --- Session persistence (survives refresh) -----------------------
+  // Saves the current slate's full HTML + metadata to localStorage so
+  // a page refresh doesn't lose work. Clears when the user explicitly
+  // loads a different slate or clicks "Change."
+  const saveSession = () => {
+    if (!slides.length) return;
+    try {
+      const data = {
+        html: getViewerFullHTML ? getViewerFullHTML() : '',
+        source: document.getElementById('topbar-name')?.textContent || '',
+        filename: currentFilename,
+        ts: Date.now(),
+      };
+      localStorage.setItem(SESSION_KEY, JSON.stringify(data));
+    } catch { /* storage full or blocked — silently skip */ }
+  };
+
+  const clearSession = () => {
+    try { localStorage.removeItem(SESSION_KEY); } catch {}
+  };
+
+  const restoreSession = () => {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      if (!data.html) return false;
+      // Only restore if it's less than 24 hours old
+      if (Date.now() - data.ts > 86400000) { clearSession(); return false; }
+      const ok = loadHTML(data.html, data.source || 'restored session', null);
+      if (ok) {
+        currentFilename = data.filename || 'slate.html';
+      }
+      return ok;
+    } catch { return false; }
+  };
 
   // --- Strip shell-level rules from injected deck stylesheets -----
   // Decks often ship with `body { background: …; padding: …; }` and
@@ -782,6 +820,8 @@
       initNav();
       jumpFromHash({ push: false });
       setTimeout(showNav, 600);
+      // Auto-save to localStorage so a refresh doesn't lose the slate
+      setTimeout(saveSession, 200);
 
       return true;
     } catch (err) {
@@ -1212,6 +1252,8 @@
     initNav();
     jumpFromHash({ push: false });
     setTimeout(showNav, 300);
+    // Persist edits so a refresh keeps them
+    setTimeout(saveSession, 200);
   };
 
   const getFullHTML = () => {
@@ -1310,6 +1352,7 @@ ${bodyHTML}
     document.querySelectorAll('[data-deck-style],[data-viewer]').forEach(n => n.remove());
     history.replaceState(null, '', location.pathname);
     document.title = 'Slate';
+    clearSession();
     renderRecent();
     const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
     if (fsEl) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
@@ -1365,12 +1408,12 @@ ${bodyHTML}
     }
   });
 
-  // --- URL param auto-load -----------------------------------------
+  // --- Auto-load (priority: URL param → saved session → empty) -----
   const params = new URLSearchParams(location.search);
   const deckParam = params.get('deck');
   if (deckParam) {
     loadFromURL(deckParam);
-  } else {
+  } else if (!restoreSession()) {
     renderRecent();
   }
 })();

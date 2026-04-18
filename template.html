@@ -326,11 +326,11 @@
   .split-image .txt p{font-size:.95cqw;line-height:1.65;color:var(--ink-muted);margin-bottom:.85cqw;}
   .split-image .txt p:last-child{margin-bottom:0;}
 
-  /* --- slide 23: image grid 2x2 (16:9 cells, tight rows) --- */
-  .img-grid-2{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:.8cqw;padding-top:2.4cqw;border-top:1px solid var(--rule);}
+  /* --- image row (4-up single row with captions) --- */
+  .img-grid-2{margin-top:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:.8cqw;padding-top:2.4cqw;border-top:1px solid var(--rule);}
   .img-grid-2 .cell{display:flex;flex-direction:column;gap:.5cqw;}
-  .img-grid-2 .cell .img-ph{aspect-ratio:16/9;}
-  .img-grid-2 .cap{font-size:.75cqw;color:var(--ink-muted);letter-spacing:.04em;line-height:1.4;}
+  .img-grid-2 .cell .img-ph{aspect-ratio:4/3;}
+  .img-grid-2 .cap{font-size:.7cqw;color:var(--ink-muted);letter-spacing:.04em;line-height:1.4;}
 
   /* --- slide 24: contact sheet 6-up (16:9 cells, 3x2 grid) --- */
   .img-grid-6{margin-top:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:.6cqw;padding-top:2.4cqw;border-top:1px solid var(--rule);}
@@ -972,11 +972,11 @@
     </div>
   </section>
 
-  <!-- 24 · IMAGE GRID 2x2 -->
+  <!-- 24 · IMAGE ROW (4-up) -->
   <section class="slide">
     <div class="inner">
       <div class="meta-row"><span class="eyebrow">Selected moments</span><span class="sec">Section 04</span></div>
-      <h2 class="h2" style="max-width:60%;font-size:2.6cqw;">Four scenes, one story.</h2>
+      <h2 class="h2" style="max-width:70%;font-size:2.6cqw;">Four scenes, one story.</h2>
       <div class="img-grid-2">
         <div class="cell"><div class="img-ph" data-label="Image 01"></div><div class="cap">Short caption for the first image.</div></div>
         <div class="cell"><div class="img-ph" data-label="Image 02"></div><div class="cap">Short caption for the second image.</div></div>

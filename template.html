@@ -273,15 +273,37 @@
   .kpi-tile .delta.down{color:var(--bad);}
   .kpi-tile .delta .arr{font-weight:500;}
 
-  /* --- slide 20: data table --- */
-  .data-table{margin-top:auto;padding-top:1.6cqw;}
-  .data-table table{width:100%;border-collapse:collapse;}
-  .data-table th,.data-table td{padding:.75cqw 1.2cqw;text-align:left;font-size:.88cqw;}
-  .data-table th{font-size:.7cqw;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-muted);border-bottom:1px solid var(--rule);}
-  .data-table td{border-bottom:1px solid var(--rule);color:var(--ink);}
-  .data-table tr:last-child td{border-bottom:none;}
-  .data-table td.num{text-align:right;font-variant-numeric:tabular-nums;color:var(--accent);font-weight:500;}
-  .data-table td.muted{color:var(--ink-muted);}
+  /* --- slide 20: KPI targets-vs-actuals scorecard --- */
+  .kpi-table{margin-top:auto;padding-top:1.6cqw;}
+  .kpi-table .head,.kpi-table .kpi-row{
+    display:grid;
+    grid-template-columns:1.7fr .9fr .9fr .9fr 2fr;
+    gap:1.4cqw;
+    align-items:center;
+  }
+  .kpi-table .head{
+    padding:0 0 .7cqw;
+    border-bottom:1px solid var(--rule);
+    font-size:.7cqw;font-weight:500;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink-muted);
+  }
+  .kpi-table .head .ta{text-align:right;}
+  .kpi-table .kpi-row{padding:.85cqw 0;border-bottom:1px solid var(--rule);}
+  .kpi-table .kpi-row:last-child{border-bottom:none;}
+  .kpi-table .metric .name{font-size:.95cqw;font-weight:500;color:var(--ink);letter-spacing:-.008em;line-height:1.25;}
+  .kpi-table .metric .desc{font-size:.7cqw;color:var(--ink-muted);margin-top:.2cqw;line-height:1.4;}
+  .kpi-table .target{font-size:.88cqw;color:var(--ink-muted);text-align:right;font-variant-numeric:tabular-nums;letter-spacing:-.008em;}
+  .kpi-table .actual{font-size:.95cqw;font-weight:500;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;letter-spacing:-.008em;}
+  .kpi-table .variance{font-size:.88cqw;font-weight:500;text-align:right;font-variant-numeric:tabular-nums;letter-spacing:-.008em;}
+  .kpi-table .variance.good{color:var(--good);}
+  .kpi-table .variance.bad{color:var(--bad);}
+  .kpi-table .variance.flat{color:var(--ink-muted);}
+  .kpi-table .prog{display:flex;flex-direction:column;gap:.3cqw;align-items:stretch;}
+  .kpi-table .prog .track{height:.55cqw;background:rgba(18,19,50,0.06);border-radius:1px;overflow:hidden;}
+  .kpi-table .prog .fill{height:100%;background:var(--accent);border-radius:1px;}
+  .kpi-table .prog .fill.good{background:var(--good);}
+  .kpi-table .prog .fill.bad{background:var(--bad);}
+  .kpi-table .prog .pct{font-size:.68cqw;color:var(--ink-muted);font-variant-numeric:tabular-nums;letter-spacing:.04em;text-align:right;}
 
   /* --- slide 21: image hero (full-bleed) --- */
   .slide.hero-slide{color:#FFFFFF;}
@@ -802,23 +824,61 @@
     </div>
   </section>
 
-  <!-- 20 · DATA TABLE -->
+  <!-- 20 · KPI SCORECARD (targets vs actuals) -->
   <section class="slide">
     <div class="inner">
-      <div class="meta-row"><span class="eyebrow">Comparison</span><span class="sec">Section 03</span></div>
-      <h2 class="h2" style="max-width:60%;font-size:2.6cqw;">The options, side by side.</h2>
-      <div class="data-table">
-        <table>
-          <thead>
-            <tr><th>Option</th><th>Category A</th><th>Category B</th><th class="num">Price</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>First option name</td><td class="muted">Attribute</td><td class="muted">Attribute</td><td class="num">$1,200</td></tr>
-            <tr><td>Second option name</td><td class="muted">Attribute</td><td class="muted">Attribute</td><td class="num">$2,400</td></tr>
-            <tr><td>Third option name</td><td class="muted">Attribute</td><td class="muted">Attribute</td><td class="num">$3,800</td></tr>
-            <tr><td>Fourth option name</td><td class="muted">Attribute</td><td class="muted">Attribute</td><td class="num">$5,200</td></tr>
-          </tbody>
-        </table>
+      <div class="meta-row"><span class="eyebrow">Scorecard</span><span class="sec">Section 03</span></div>
+      <h2 class="h2" style="max-width:70%;font-size:2.6cqw;">Targets vs actuals, this quarter.</h2>
+      <div class="kpi-table">
+        <div class="head">
+          <div>Metric</div>
+          <div class="ta">Target</div>
+          <div class="ta">Actual</div>
+          <div class="ta">Variance</div>
+          <div class="ta">% of target</div>
+        </div>
+        <div class="kpi-row">
+          <div class="metric"><div class="name">Revenue</div><div class="desc">Quarterly new-customer ARR</div></div>
+          <div class="target">$3.0M</div>
+          <div class="actual">$3.1M</div>
+          <div class="variance good">+3.3%</div>
+          <div class="prog"><div class="track"><div class="fill good" style="width:100%;"></div></div><div class="pct">103%</div></div>
+        </div>
+        <div class="kpi-row">
+          <div class="metric"><div class="name">New customers</div><div class="desc">Net-new logos closed</div></div>
+          <div class="target">40</div>
+          <div class="actual">42</div>
+          <div class="variance good">+5.0%</div>
+          <div class="prog"><div class="track"><div class="fill good" style="width:100%;"></div></div><div class="pct">105%</div></div>
+        </div>
+        <div class="kpi-row">
+          <div class="metric"><div class="name">Gross margin</div><div class="desc">Blended, ex-one-time</div></div>
+          <div class="target">72%</div>
+          <div class="actual">70%</div>
+          <div class="variance bad">−2.8%</div>
+          <div class="prog"><div class="track"><div class="fill" style="width:97%;"></div></div><div class="pct">97%</div></div>
+        </div>
+        <div class="kpi-row">
+          <div class="metric"><div class="name">Retention (NRR)</div><div class="desc">Net revenue retention, LTM</div></div>
+          <div class="target">115%</div>
+          <div class="actual">112%</div>
+          <div class="variance bad">−2.6%</div>
+          <div class="prog"><div class="track"><div class="fill" style="width:97%;"></div></div><div class="pct">97%</div></div>
+        </div>
+        <div class="kpi-row">
+          <div class="metric"><div class="name">Sales cycle</div><div class="desc">Median days, enterprise</div></div>
+          <div class="target">60 days</div>
+          <div class="actual">78 days</div>
+          <div class="variance bad">+30%</div>
+          <div class="prog"><div class="track"><div class="fill bad" style="width:77%;"></div></div><div class="pct">77%</div></div>
+        </div>
+        <div class="kpi-row">
+          <div class="metric"><div class="name">Pipeline coverage</div><div class="desc">Ratio of pipeline to plan</div></div>
+          <div class="target">3.0×</div>
+          <div class="actual">3.0×</div>
+          <div class="variance flat">flat</div>
+          <div class="prog"><div class="track"><div class="fill" style="width:100%;"></div></div><div class="pct">100%</div></div>
+        </div>
       </div>
       <div class="chrome"><div class="mark"><span class="dot"></span><span>STUDIO</span></div><span>20 / 42</span></div>
     </div>

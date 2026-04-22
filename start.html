@@ -211,6 +211,13 @@ Audience: [WHO THE DECK IS FOR].
 Accent colour: [HEX, e.g. #3D3FB7].
 Brand wordmark: [e.g. DEKSIA — replaces "STUDIO" in every slide's chrome].
 
+⚠ CRITICAL — DO NOT REWRITE THE CSS.
+The &lt;style&gt; block contains a carefully tuned design system. Do NOT
+"clean up", reformat, consolidate, or replace class selectors with
+tag selectors. Do NOT remove the @media print block — it's what makes
+the slate export as a proper PDF. Copy the entire &lt;style&gt; block through
+to your output unchanged, except for the three :root variables listed below.
+
 YOU MAY CHANGE:
 — The three colour variables in :root (--accent, --accent-soft, --slide-bg-dark).
 — The &lt;title&gt; tag and the "STUDIO" wordmark in every chrome.
@@ -220,14 +227,17 @@ YOU MAY CHANGE:
 
 KEEP EXACTLY AS-IS:
 — Every CSS rule below the :root block — typography, layout, chrome, meta row,
-  and all slide-type styles.
+  all slide-type styles, AND the @media print block.
 — Every class name (.slide, .dark, .eyebrow, .meta-row, .chrome, .inner, etc.).
 — The 16:9 aspect ratio and the cqw sizing system.
 — Inter as the only font.
 — The hairline-rule dividers (no cards, no thick borders, no shadows on text).
 — The bottom chrome on every slide and the meta row on every non-title slide.
 
-Return the complete modified HTML as a single code block.</span>
+Output format: the complete HTML file as a single fenced code block.
+File size should be roughly the same as the template (large CSS block
+preserved). If your output is significantly smaller than the template,
+you've stripped CSS — start over and preserve it literally.</span>
         </div>
       </div>
     </div>

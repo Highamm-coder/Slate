@@ -1271,6 +1271,36 @@
   // --- Save (download) from viewer mode ----------------------------
   // Reconstruct a full HTML file from the viewer's current gallery
   // content + the CSS/links captured when the slate was loaded.
+  //
+  // We ALWAYS inject a standard print CSS block into every download,
+  // regardless of whether the loaded slate had its own. This is a
+  // defence against LLMs that "helpfully" rewrite the template's CSS
+  // and strip the @media print block in the process — the downloaded
+  // file still prints as a proper 16:9 PDF.
+  const STANDARD_PRINT_CSS = `
+/* Slate: standard print CSS — injected by the viewer on download.
+   Forces 1 slide per page at 16:9 with full color reproduction. */
+@media print{
+  @page{size:1400px 787px;margin:0;}
+  *,*::before,*::after{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+    color-adjust:exact !important;
+  }
+  html,body{background:#fff !important;padding:0 !important;margin:0 !important;width:1400px;}
+  .gallery,main{gap:0 !important;max-width:none !important;margin:0 !important;padding:0 !important;}
+  .slide{
+    width:1400px !important;height:787px !important;aspect-ratio:auto !important;
+    border-radius:0 !important;box-shadow:none !important;
+    page-break-after:always !important;page-break-inside:avoid !important;
+    break-after:page !important;break-inside:avoid !important;
+    opacity:1 !important;transform:none !important;overflow:hidden !important;
+  }
+  .slide:last-child{page-break-after:auto !important;}
+  .slide .bg{display:block !important;position:absolute !important;inset:0 !important;background-size:cover !important;background-position:center !important;}
+  img{max-width:none !important;}
+}`;
+
   const getViewerFullHTML = () => {
     const bodyHTML = gallery.innerHTML;
     const title = document.getElementById('topbar-name')?.textContent || 'Slate';
@@ -1289,6 +1319,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 ${linkTags}<style>
 ${lastLoadedCSS}
+${STANDARD_PRINT_CSS}
 </style>
 </head>
 <body>

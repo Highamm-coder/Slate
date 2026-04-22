@@ -305,7 +305,19 @@
   .kpi-table .variance.flat,.kpi-table .delta.flat{color:var(--ink-muted);}
   .kpi-table .delta .arr{font-size:.82cqw;font-weight:600;line-height:1;}
 
-  /* --- slide 21: image hero (full-bleed) --- */
+  /* --- slide 22: KPI scorecard with status pills --- */
+  .kpi-table .status{
+    font-size:.72cqw;font-weight:500;text-align:right;
+    display:flex;align-items:center;justify-content:flex-end;gap:.4cqw;
+    letter-spacing:-.008em;
+  }
+  .kpi-table .status .pip{width:.55cqw;height:.55cqw;border-radius:50%;flex-shrink:0;}
+  .kpi-table .status.on-track{color:var(--good);}
+  .kpi-table .status.on-track .pip{background:var(--good);}
+  .kpi-table .status.off-track{color:var(--bad);}
+  .kpi-table .status.off-track .pip{background:var(--bad);}
+
+  /* --- slide 23: image hero (full-bleed) --- */
   .slide.hero-slide{color:#FFFFFF;}
   .slide.hero-slide .hero-bg{position:absolute;inset:0;z-index:1;}
   .slide.hero-slide .hero-bg .img-ph{width:100%;height:100%;border:none;border-radius:0;font-size:.9cqw;color:rgba(255,255,255,0.5);}
@@ -494,6 +506,53 @@
   .close-layout .cta{display:inline-flex;align-items:center;gap:1cqw;padding:1.4cqw 2cqw;background:#FFFFFF;color:var(--slide-bg-dark);border-radius:2px;font-size:1cqw;font-weight:500;text-decoration:none;}
   .close-layout .contact{display:flex;flex-direction:column;gap:.5cqw;font-size:.98cqw;color:rgba(242,241,236,0.72);line-height:1.5;}
   .close-layout .contact strong{color:#F2F1EC;font-weight:500;}
+
+  /* =================================================================
+     PRINT / PDF EXPORT
+     =================================================================
+     Forces one slide per page at exact 16:9 dimensions with full color
+     reproduction. Without this block, browsers default to Letter/A4
+     landscape (1.29:1), which leaves an off-white strip on the right
+     of each slide and misaligns the chrome. Keep this block intact
+     when adapting the template — it's what makes Cmd-P produce a
+     usable PDF for client handoff.
+     ================================================================= */
+  @media print{
+    @page{size:1400px 787px;margin:0;}
+    *,*::before,*::after{
+      -webkit-print-color-adjust:exact !important;
+      print-color-adjust:exact !important;
+      color-adjust:exact !important;
+    }
+    html,body{
+      background:#fff !important;
+      padding:0 !important;margin:0 !important;
+      width:1400px;
+    }
+    .gallery{gap:0 !important;max-width:none !important;margin:0 !important;}
+    .slide{
+      width:1400px !important;
+      height:787px !important;
+      aspect-ratio:auto !important;
+      border-radius:0 !important;
+      box-shadow:none !important;
+      page-break-after:always !important;
+      page-break-inside:avoid !important;
+      break-after:page !important;
+      break-inside:avoid !important;
+      opacity:1 !important;
+      transform:none !important;
+      overflow:hidden !important;
+    }
+    .slide:last-child{page-break-after:auto !important;}
+    .slide .bg{
+      display:block !important;
+      position:absolute !important;inset:0 !important;
+      background-size:cover !important;
+      background-position:center !important;
+    }
+    img{max-width:none !important;}
+  }
 </style>
 </head>
 <body>
@@ -944,7 +1003,53 @@
     </div>
   </section>
 
-  <!-- 22 · FULL-BLEED IMAGE HERO -->
+  <!-- 22 · KPI SCORECARD · STATUS PILLS -->
+  <section class="slide">
+    <div class="inner">
+      <div class="meta-row"><span class="eyebrow">Scorecard · Status tracker</span><span class="sec">Section 03</span></div>
+      <h2 class="h2" style="max-width:70%;font-size:2.6cqw;">Targets vs actuals with status.</h2>
+      <div class="kpi-table">
+        <div class="head" style="grid-template-columns:2.2fr .8fr .8fr .8fr .8fr;">
+          <div>Metric</div>
+          <div class="ta">Actual</div>
+          <div class="ta">Goal</div>
+          <div class="ta">% to Goal</div>
+          <div class="ta">Status</div>
+        </div>
+        <div class="kpi-row" style="grid-template-columns:2.2fr .8fr .8fr .8fr .8fr;">
+          <div class="metric"><div class="name">First metric name</div><div class="desc">Source · channel detail</div></div>
+          <div class="actual">120</div>
+          <div class="target">100</div>
+          <div class="variance good">120%</div>
+          <div class="status on-track"><span class="pip"></span>On Track</div>
+        </div>
+        <div class="kpi-row" style="grid-template-columns:2.2fr .8fr .8fr .8fr .8fr;">
+          <div class="metric"><div class="name">Second metric name</div><div class="desc">Source · channel detail</div></div>
+          <div class="actual">8</div>
+          <div class="target">50</div>
+          <div class="variance bad">16%</div>
+          <div class="status off-track"><span class="pip"></span>Off Track</div>
+        </div>
+        <div class="kpi-row" style="grid-template-columns:2.2fr .8fr .8fr .8fr .8fr;">
+          <div class="metric"><div class="name">Third metric name</div><div class="desc">Source · channel detail</div></div>
+          <div class="actual">4,200</div>
+          <div class="target">5,000</div>
+          <div class="variance good">84%</div>
+          <div class="status on-track"><span class="pip"></span>On Track</div>
+        </div>
+        <div class="kpi-row" style="grid-template-columns:2.2fr .8fr .8fr .8fr .8fr;">
+          <div class="metric"><div class="name">Fourth metric name</div><div class="desc">Source · channel detail</div></div>
+          <div class="actual">6,622</div>
+          <div class="target">6,000</div>
+          <div class="variance good">110%</div>
+          <div class="status on-track"><span class="pip"></span>On Track</div>
+        </div>
+      </div>
+      <div class="chrome"><div class="mark"><span class="dot"></span><span>STUDIO</span></div><span>22 / 43</span></div>
+    </div>
+  </section>
+
+  <!-- 23 · FULL-BLEED IMAGE HERO -->
   <section class="slide hero-slide">
     <div class="hero-bg"><div class="img-ph">Replace with a full-bleed image</div></div>
     <div class="inner">
